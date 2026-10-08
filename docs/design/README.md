@@ -1,0 +1,34 @@
+# Review flow sketches (task 0.3)
+
+Owner: Valery. Design sketches for the professor's side of EasyGrade. Everything here uses fake teams and fake names. Nothing is connected to the pipeline.
+
+## Files
+
+| File | What it is |
+|---|---|
+| `review-flow-sketch.html` | Clickable sketch of the whole flow. Open it in a browser. |
+| `grades_mock.csv` | What the professor downloads: one row per student, four columns. |
+| `grades_example.xlsx` | The same output as Excel, with a Details tab for the rubric breakdown (3 fake teams). |
+
+## The flow in the sketch
+
+1. **Choose the submissions folder.** One folder holds every notebook and video. A preview shows what was found before anything runs.
+2. **Check the matches.** Each notebook is paired with its video by the student names in the file names (Ingest). Anything that could not be matched is shown so the professor can assign it, or choose "No video for this team".
+3. **Grading progress.** Matching, transcribing on this computer, reading notebooks, suggesting grades.
+4. **Review.** All teams in one list: grade, what needs attention, AI usage, and a Mark reviewed button. Each team opens into a dropdown with an overall summary, the strongest and weakest category, what to check, the AI-usage signals, and how the grade adds up (six categories with reason and evidence). The professor can change a score; the total is always added up by code.
+5. **Download.** Only reviewed teams go into the file.
+
+**Incomplete submissions:** a team with no video is still graded on everything else, shows as "Incomplete" with its score so far, and cannot be marked reviewed until the professor enters the Presentation score. The tool never invents a score it could not grade.
+
+## Output the professor asked for
+
+He only wants four columns: `Student name`, `Score (out of 200)`, `Needs your attention`, `AI usage`. That is the CSV, and the first tab of the Excel. The rubric breakdown goes on a second tab, `Details`, where changing a score updates the level, the team total and the first tab.
+
+## Decisions to confirm (Jorge with the professor, Lucas in the decisions log)
+
+1. **Export columns.** The PRD and plan list eight CSV columns. The professor wants four, with the detail on a second tab. This changes the export (1.9, Matias and Valery).
+2. **Input is one folder, not a Canvas zip.** Replaces assumption D-004. Matching uses file names (`match.method: filename_stem`).
+3. **A match-check screen** before grading, so the professor can fix unmatched files. Not in the plan yet (Ingest, Lucas).
+4. **Overall summary per team.** The two-sentence summary needs a new field from the Grader (for example `overall_summary` in `suggestion.json`), which is a contract change. Strongest and weakest category come from the scores and need nothing new.
+5. **Row order.** The sketch lists teams that need attention first. The professor may prefer alphabetical order for Canvas.
+6. **Wording.** All flag and AI-usage text is a draft for Jorge.
