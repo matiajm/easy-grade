@@ -1,0 +1,190 @@
+{
+  "description": "FAKE answer key for batch A (synthetic data, invented students). Used only by evals; never given to the model.",
+  "level_keys": [
+    "excellent",
+    "good",
+    "needs_work"
+  ],
+  "rubric_note": "Levels follow the 200-point CAP3321C Final Project rubric. null = no grade expected.",
+  "teams": {
+    "team-001": {
+      "students": [
+        "Isabel Moreno",
+        "Daniel Park"
+      ],
+      "planned_levels": {
+        "data_cleaning": "excellent",
+        "analysis_viz": "excellent",
+        "interpretation": "excellent",
+        "code_quality": "excellent",
+        "presentation": "excellent",
+        "collaboration": "excellent"
+      },
+      "seeded_problems": []
+    },
+    "team-002": {
+      "students": [
+        "Camila Reyes",
+        "Omar Haddad"
+      ],
+      "planned_levels": {
+        "data_cleaning": "excellent",
+        "analysis_viz": "excellent",
+        "interpretation": "good",
+        "code_quality": "excellent",
+        "presentation": "good",
+        "collaboration": "excellent"
+      },
+      "seeded_problems": []
+    },
+    "team-003": {
+      "students": [
+        "Nadia Petrov",
+        "Elijah Brooks"
+      ],
+      "planned_levels": {
+        "data_cleaning": "good",
+        "analysis_viz": "good",
+        "interpretation": "good",
+        "code_quality": "good",
+        "presentation": "good",
+        "collaboration": "good"
+      },
+      "seeded_problems": []
+    },
+    "team-004": {
+      "students": [
+        "Tomas Ibarra",
+        "Grace Okoye"
+      ],
+      "planned_levels": {
+        "data_cleaning": "good",
+        "analysis_viz": "good",
+        "interpretation": "good",
+        "code_quality": "needs_work",
+        "presentation": "good",
+        "collaboration": "good"
+      },
+      "seeded_problems": [
+        {
+          "problem": "cells run out of order",
+          "flag": "EXEC_ORDER"
+        }
+      ]
+    },
+    "team-005": {
+      "students": [
+        "Layla Haddad",
+        "Victor Salazar"
+      ],
+      "planned_levels": {
+        "data_cleaning": "excellent",
+        "analysis_viz": "good",
+        "interpretation": "needs_work",
+        "code_quality": "good",
+        "presentation": "good",
+        "collaboration": "good"
+      },
+      "seeded_problems": []
+    },
+    "team-006": {
+      "students": [
+        "Marco Bianchi",
+        "Sofia Duarte"
+      ],
+      "planned_levels": {
+        "data_cleaning": "needs_work",
+        "analysis_viz": "needs_work",
+        "interpretation": "needs_work",
+        "code_quality": "needs_work",
+        "presentation": "good",
+        "collaboration": "good"
+      },
+      "seeded_problems": [
+        {
+          "problem": "a cell stops with an error",
+          "flag": "ERROR_OUTPUT"
+        },
+        {
+          "problem": "cells run out of order",
+          "flag": "EXEC_ORDER"
+        }
+      ]
+    },
+    "team-007": {
+      "students": [
+        "Hannah Weiss",
+        "Kwame Mensah"
+      ],
+      "planned_levels": {
+        "data_cleaning": "good",
+        "analysis_viz": "excellent",
+        "interpretation": "good",
+        "code_quality": "good",
+        "presentation": "needs_work",
+        "collaboration": "good"
+      },
+      "seeded_problems": []
+    },
+    "team-008": {
+      "students": [
+        "Rafael Costa",
+        "Mei Tanaka"
+      ],
+      "planned_levels": {
+        "data_cleaning": null,
+        "analysis_viz": null,
+        "interpretation": null,
+        "code_quality": null,
+        "presentation": "good",
+        "collaboration": null
+      },
+      "seeded_problems": [
+        {
+          "problem": "no notebook submitted",
+          "flag": "NOTEBOOK_MISSING"
+        }
+      ]
+    },
+    "team-009": {
+      "students": [
+        "Aaliyah Grant",
+        "Leandro Ferreira"
+      ],
+      "planned_levels": {
+        "data_cleaning": "needs_work",
+        "analysis_viz": "needs_work",
+        "interpretation": "needs_work",
+        "code_quality": "needs_work",
+        "presentation": "good",
+        "collaboration": "needs_work"
+      },
+      "seeded_problems": [
+        {
+          "problem": "empty notebook",
+          "flag": "NOTEBOOK_EMPTY"
+        }
+      ]
+    },
+    "team-010": {
+      "students": [
+        "Priscilla Ng",
+        "Jonas Lindqvist"
+      ],
+      "planned_levels": {
+        "data_cleaning": "good",
+        "analysis_viz": "good",
+        "interpretation": "excellent",
+        "code_quality": "good",
+        "presentation": "good",
+        "collaboration": "needs_work"
+      },
+      "seeded_problems": [
+        {
+          "problem": "no student names in the header",
+          "flag": "NAME_NOT_FOUND"
+        }
+      ]
+    }
+  }
+}
