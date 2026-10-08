@@ -1,6 +1,10 @@
 {
   "_comment": "DRAFT parser config. Rules follow the CAP3321C assignment sheet (header lines and file-name convention). Jorge owns the final file; extra keys are ignored by the parser.",
   "max_output_chars": 2000,
+  "max_source_chars": 20000,
+  "max_images": 50,
+  "max_image_bytes": 5000000,
+  "max_notebook_bytes": 50000000,
   "filename_pattern": "^[A-Z][A-Za-z'-]+(_[A-Z][A-Za-z'-]+){1,2}_FinalProject\\.ipynb$",
   "name_rules": {
     "header_cell_index": 0,

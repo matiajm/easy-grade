@@ -4,6 +4,8 @@
 |---|---|---|---|---|---|
 | 0.5 | Read notebooks with `nbformat.read(path, as_version=4)` as data only, never execute | nbformat; raw `json` | Matias (spike) | nbformat normalizes versions and validates; raw JSON is a fallback | Proposed |
 | 1.5-a | `checks.execution_order.skipped` in notebook_cells.json is a list of cell indices (like `out_of_order_cells`), not a bool | bool; list of indices | Matias, to match Diego's fixture `fixtures/bundles/team-001/notebook_cells.json` | Diego's fixture already uses a list and his grader does not read the field, so nothing on his side changes. A list says which cells, and `[]` means none. | Decided, Lucas to put it in contracts 0.1 |
+| 2.7-a | Parser safety limits live in assignment.json: 20,000 chars per cell source, 50 images of at most 5 MB each, 50 MB per notebook. Anything over a limit is cut or skipped and says so in the output (never silently dropped). Oversized notebooks give NOTEBOOK_UNREADABLE. | no limits; limits with a flag; limits with an in-output note | Matias | One huge or hostile notebook must not fill the disk or stall the pipeline. The flag registry is fixed by the contract, so the note goes in the output text instead of a new flag code. | Decided, numbers are guesses to tune |
+| 2.7-b | Notebook bytes are read as UTF-8 (BOM allowed) and fall back to Windows-1252, instead of failing as unreadable. | UTF-8 only; fallback | Matias | Older tools and some LMS exports save Windows-1252, and the professor should not lose a team over an encoding. | Decided |
 
 ## 0.5 nbformat spike notes
 

@@ -83,6 +83,11 @@ class HeaderRules(_Base):
 
 class AssignmentConfig(_Base):
     max_output_chars: int = Field(2000, gt=0)
+    # Safety limits so one oversized notebook cannot blow up the bundle or the disk.
+    max_source_chars: int = Field(20000, gt=0)
+    max_images: int = Field(50, ge=0)
+    max_image_bytes: int = Field(5_000_000, gt=0)
+    max_notebook_bytes: int = Field(50_000_000, gt=0)
     filename_pattern: str
     name_rules: NameRules
     header_rules: HeaderRules

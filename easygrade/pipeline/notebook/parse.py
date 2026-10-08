@@ -35,7 +35,10 @@ from .names import filename_ok, missing_header_fields, read_header
 
 PRODUCED_BY = "parser@0.1.0"
 IMAGE_MIMES = {"image/png": "png", "image/jpeg": "jpg"}
+IMAGE_MAGIC = {"image/png": b"\x89PNG\r\n\x1a\n", "image/jpeg": b"\xff\xd8\xff"}
 _TEAM_ID_OK = re.compile(r"^[A-Za-z0-9_\-]+$")
+_ANSI = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
+SYNTAX_CHECK_FACTOR = 10  # skip ast.parse when a cell is more than this many times max_source_chars
 
 
 def _truncate(text: str, limit: int) -> str:
@@ -46,7 +49,15 @@ def _truncate(text: str, limit: int) -> str:
 
 def _text(value) -> str:
     # nbformat normally gives str, but multiline MIME values can be lists.
-    return "".join(value) if isinstance(value, list) else str(value)
+    text = "".join(value) if isinstance(value, list) else str(value)
+    # Lone surrogates (from \ud800-style escapes) cannot be written as UTF-8; replace them.
+    return text.encode("utf-8", "replace").decode("utf-8")
+
+
+def _clean_output_text(text: str) -> str:
+    """Strip terminal colour codes and collapse carriage-return progress bars to their last state."""
+    text = _ANSI.sub("", text)
+    return "\n".join(line.split("\r")[-1] for line in text.split("\n"))
 
 
 def syntax_ok(source: str) -> Optional[bool]:
@@ -74,28 +85,37 @@ def syntax_ok(source: str) -> Optional[bool]:
         return False
 
 
-def _save_image(data, ext: str, out_dir: Path, cell_index: int, n: int) -> Optional[str]:
+def _save_image(data, mime: str, ext: str, out_dir: Path, cell_index: int, n: int,
+                config: AssignmentConfig) -> tuple[Optional[str], Optional[str]]:
+    """Returns (relative path, None) when saved, or (None, reason) when the image is skipped."""
+    if n >= config.max_images:
+        return None, f"limit of {config.max_images} images reached"
+    # Check the encoded size first so a huge payload is never decoded.
+    encoded = _text(data)
+    if len(encoded) > config.max_image_bytes * 4 // 3 + 4:
+        return None, "image larger than the size limit"
     try:
-        raw = base64.b64decode(_text(data), validate=False)
+        raw = base64.b64decode(encoded, validate=False)
     except (binascii.Error, ValueError):
-        return None
-    if not raw:
-        return None
+        return None, "image data could not be decoded"
+    if not raw.startswith(IMAGE_MAGIC[mime]):
+        return None, "image data is not a valid image"
     rel = f"images/cell_{cell_index:03d}_{n}.{ext}"
     path = out_dir / rel
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(raw)
-    return rel
+    return rel, None
 
 
-def _convert_output(out, cell_index: int, out_dir: Path, limit: int, image_count: list[int],
-                    images: list[ImageRef]) -> list[Output]:
+def _convert_output(out, cell_index: int, out_dir: Path, config: AssignmentConfig,
+                    image_count: list[int], images: list[ImageRef]) -> list[Output]:
     """One nbformat output -> zero or more parser outputs (kind text/table/error/image)."""
+    limit = config.max_output_chars
     kind = out.get("output_type")
     if kind == "stream":
-        return [Output(kind="text", text=_truncate(_text(out.get("text", "")), limit))]
+        return [Output(kind="text", text=_truncate(_clean_output_text(_text(out.get("text", ""))), limit))]
     if kind == "error":
-        msg = f"{out.get('ename', 'Error')}: {out.get('evalue', '')}"
+        msg = _clean_output_text(_text(f"{out.get('ename', 'Error')}: {out.get('evalue', '')}"))
         return [Output(kind="error", text=_truncate(msg, limit))]
     if kind not in ("display_data", "execute_result"):
         return []
@@ -104,26 +124,41 @@ def _convert_output(out, cell_index: int, out_dir: Path, limit: int, image_count
     result: list[Output] = []
     for mime, ext in IMAGE_MIMES.items():
         if mime in data:
-            ref = _save_image(data[mime], ext, out_dir, cell_index, image_count[0])
+            ref, reason = _save_image(data[mime], mime, ext, out_dir, cell_index, image_count[0], config)
             if ref:
                 image_count[0] += 1
                 images.append(ImageRef(cell_index=cell_index, path=ref, mime=mime))
                 result.append(Output(kind="image", image_ref=ref))
+            else:  # say so, never drop evidence silently
+                result.append(Output(kind="text", text=f"[image output not saved: {reason}]"))
     if result:
         return result
     # Colab's intrinsic+json and other vendor types are ignored on purpose.
     html = _text(data["text/html"]) if "text/html" in data else ""
     plain = _text(data["text/plain"]) if "text/plain" in data else ""
     if "<table" in html.lower() and plain:
-        return [Output(kind="table", text=_truncate(plain, limit))]
+        return [Output(kind="table", text=_truncate(_clean_output_text(plain), limit))]
     if plain:
-        return [Output(kind="text", text=_truncate(plain, limit))]
+        return [Output(kind="text", text=_truncate(_clean_output_text(plain), limit))]
     return []
 
 
-def read_notebook(path: Union[str, Path]):
+def _decode(raw: bytes) -> str:
+    """UTF-8 (with or without BOM) first; older tools wrote Windows-1252, so fall back to that."""
+    for encoding in ("utf-8-sig", "cp1252"):
+        try:
+            return raw.decode(encoding)
+        except UnicodeDecodeError:
+            continue
+    return raw.decode("utf-8", "replace")
+
+
+def read_notebook(path: Union[str, Path], max_bytes: Optional[int] = None):
     """Read as nbformat v4 data. Raises on unreadable files; never executes anything."""
-    return nbformat.read(str(path), as_version=4)
+    path = Path(path)
+    if max_bytes is not None and path.stat().st_size > max_bytes:
+        raise ValueError("notebook larger than the size limit")
+    return nbformat.reads(_decode(path.read_bytes()), as_version=4)
 
 
 def parse_notebook(path: Union[str, Path], team_id: str, out_dir: Union[str, Path],
@@ -142,7 +177,7 @@ def parse_notebook(path: Union[str, Path], team_id: str, out_dir: Union[str, Pat
     )
 
     try:
-        nb = read_notebook(path)
+        nb = read_notebook(path, config.max_notebook_bytes)
     except Exception:  # bad JSON, wrong format, missing file: report, do not crash
         return NotebookCells(
             schema_version=SCHEMA_VERSION, team_id=team_id, produced_by=PRODUCED_BY,
@@ -154,13 +189,13 @@ def parse_notebook(path: Union[str, Path], team_id: str, out_dir: Union[str, Pat
     images: list[ImageRef] = []
     image_count = [0]
     for index, c in enumerate(nb.cells):
-        source = _text(c.get("source", ""))
+        full_source = _text(c.get("source", ""))
+        source = _truncate(full_source, config.max_source_chars)
         is_code = c.cell_type == "code"
         outputs: list[Output] = []
         if is_code:
             for out in c.get("outputs", []):
-                outputs.extend(_convert_output(out, index, out_dir, config.max_output_chars,
-                                               image_count, images))
+                outputs.extend(_convert_output(out, index, out_dir, config, image_count, images))
         cells.append(Cell(
             index=index,
             cell_type=c.cell_type if c.cell_type in ("code", "markdown", "raw") else "raw",
@@ -168,7 +203,9 @@ def parse_notebook(path: Union[str, Path], team_id: str, out_dir: Union[str, Pat
             execution_count=c.get("execution_count") if is_code else None,
             outputs=outputs,
             has_error=any(o.kind == "error" for o in outputs),
-            syntax_ok=syntax_ok(source) if is_code else None,
+            syntax_ok=(syntax_ok(full_source)
+                       if is_code and len(full_source) <= SYNTAX_CHECK_FACTOR * config.max_source_chars
+                       else None),
         ))
 
     checks = compute_checks(cells)
