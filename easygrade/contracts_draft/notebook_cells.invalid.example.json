@@ -1,0 +1,18 @@
+{
+  "schema_version": "2",
+  "team_id": "team-002",
+  "produced_by": "notebook-parser 0.1.0",
+  "names": [{"name": "Cy Placeholder"}],
+  "header": {"found": true, "fields": {}},
+  "cells": [
+    {
+      "index": 0,
+      "cell_type": "spreadsheet",
+      "source": "x = 1",
+      "execution_count": "first",
+      "outputs": [{"kind": "video"}]
+    }
+  ],
+  "checks": {"empty": false},
+  "flags": [{"code": "EXEC_ORDER", "message": "Out of order", "severity": "fatal"}]
+}
