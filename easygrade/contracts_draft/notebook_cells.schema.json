@@ -102,8 +102,11 @@
           "type": "boolean"
         },
         "skipped": {
+          "items": {
+            "type": "integer"
+          },
           "title": "Skipped",
-          "type": "boolean"
+          "type": "array"
         },
         "out_of_order_cells": {
           "items": {
@@ -114,8 +117,7 @@
         }
       },
       "required": [
-        "strictly_increasing",
-        "skipped"
+        "strictly_increasing"
       ],
       "title": "ExecutionOrder",
       "type": "object"

@@ -138,7 +138,7 @@ def parse_notebook(path: Union[str, Path], team_id: str, out_dir: Union[str, Pat
     header = Header(found=False, fields={}, rules_ok=True)
     checks = Checks(
         empty=False,
-        execution_order=ExecutionOrder(strictly_increasing=True, skipped=False),
+        execution_order=ExecutionOrder(strictly_increasing=True),
     )
 
     try:

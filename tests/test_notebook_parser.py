@@ -61,7 +61,7 @@ class FixtureTests(unittest.TestCase):
         self.assertIn("EXEC_ORDER", codes(r))
         self.assertFalse(eo.strictly_increasing)
         self.assertEqual(eo.out_of_order_cells, [3, 5])
-        self.assertTrue(eo.skipped)
+        self.assertEqual(eo.skipped, [4])
         self.assertEqual(r.checks.unexecuted_code_cells, [4])
 
     def test_empty_notebook_flagged(self):
@@ -147,15 +147,15 @@ class UnitTests(unittest.TestCase):
     def test_execution_order_cases(self):
         eo = execution_order([cell(0, 1), cell(1, 2), cell(2, 4)])
         self.assertTrue(eo.strictly_increasing)
-        self.assertFalse(eo.skipped)
+        self.assertEqual(eo.skipped, [])
         eo = execution_order([cell(0, 2), cell(1, 2)])  # equal count = not strictly increasing
         self.assertEqual(eo.out_of_order_cells, [1])
         eo = execution_order([cell(0, None), cell(1, None)])  # never run
-        self.assertFalse(eo.skipped)
+        self.assertEqual(eo.skipped, [])
         eo = execution_order([cell(0, 1), cell(1, None), cell(2, 2)])
-        self.assertTrue(eo.skipped)
+        self.assertEqual(eo.skipped, [1])
         eo = execution_order([cell(0, 1), cell(1, 2), cell(2, None)])  # trailing unrun cell
-        self.assertFalse(eo.skipped)
+        self.assertEqual(eo.skipped, [])
 
     def test_empty_detection(self):
         self.assertTrue(is_empty([]))

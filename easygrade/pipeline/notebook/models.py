@@ -82,7 +82,8 @@ class ImageRef(_Base):
 
 class ExecutionOrder(_Base):
     strictly_increasing: bool
-    skipped: bool
+    # indices of non-empty code cells never run although a later cell was
+    skipped: list[int] = Field(default_factory=list)
     out_of_order_cells: list[int] = Field(default_factory=list)
 
 

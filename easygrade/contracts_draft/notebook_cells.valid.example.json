@@ -50,7 +50,7 @@
   ],
   "checks": {
     "empty": false,
-    "execution_order": {"strictly_increasing": true, "skipped": false, "out_of_order_cells": []},
+    "execution_order": {"strictly_increasing": true, "skipped": [], "out_of_order_cells": []},
     "error_cells": [],
     "unexecuted_code_cells": []
   },

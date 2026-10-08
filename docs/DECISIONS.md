@@ -3,6 +3,7 @@
 | ID | Decision | Options considered | Who decided | Why | Status |
 |---|---|---|---|---|---|
 | 0.5 | Read notebooks with `nbformat.read(path, as_version=4)` as data only, never execute | nbformat; raw `json` | Matias (spike) | nbformat normalizes versions and validates; raw JSON is a fallback | Proposed |
+| 1.5-a | `checks.execution_order.skipped` in notebook_cells.json is a list of cell indices (like `out_of_order_cells`), not a bool | bool; list of indices | Matias, to match Diego's fixture `fixtures/bundles/team-001/notebook_cells.json` | Diego's fixture already uses a list and his grader does not read the field, so nothing on his side changes. A list says which cells, and `[]` means none. | Decided, Lucas to put it in contracts 0.1 |
 
 ## 0.5 nbformat spike notes
 

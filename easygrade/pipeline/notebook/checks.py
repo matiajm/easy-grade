@@ -18,7 +18,7 @@ def execution_order(cells: list[Cell]) -> ExecutionOrder:
 
     - out_of_order_cells: executed cells whose count is not above the previous
       executed cell's count (the point where the order breaks).
-    - skipped: a non-empty code cell was never run although a later one was.
+    - skipped: indices of non-empty code cells never run although a later one was.
       Gaps in the numbers (re-runs) are normal and are not flagged.
     """
     code = [c for c in cells if c.cell_type == "code" and _has_content(c)]
@@ -32,7 +32,11 @@ def execution_order(cells: list[Cell]) -> ExecutionOrder:
         prev = c.execution_count
 
     last_executed_pos = max((i for i, c in enumerate(code) if c.execution_count is not None), default=-1)
-    skipped = last_executed_pos >= 0 and any(c.execution_count is None for c in code[:last_executed_pos])
+    skipped = (
+        [c.index for c in code[:last_executed_pos] if c.execution_count is None]
+        if last_executed_pos >= 0
+        else []
+    )
 
     return ExecutionOrder(
         strictly_increasing=not out_of_order,
