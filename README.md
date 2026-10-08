@@ -6,11 +6,18 @@ AI notebook grading (step 2) and video grading (step 3) plug into the contract i
 
 ## Quick start
 
+Use a virtual environment (Python 3.11+) so project packages stay out of your global Python:
+
 ```bash
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1            # Windows PowerShell
+# source .venv/bin/activate             # Mac / Linux
 pip install -r requirements.txt
 python -m grader demo demo_output       # runs the whole loop on fake data
 python -m unittest discover tests       # 7 tests
 ```
+
+If PowerShell blocks the activate script, run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once.
 
 Open `demo_output/grades.xlsx` to see the final export.
 
