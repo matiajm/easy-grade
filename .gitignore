@@ -2,3 +2,11 @@ __pycache__/
 *.py[cod]
 *.db
 .DS_Store
+
+easygrade/bundles/
+*.zip
+*.mp4
+*.mov
+*.webm
+.env*
+!.env.example
