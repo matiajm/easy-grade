@@ -4,8 +4,6 @@ Checks the planted text really is where the key says, the key lists a level it m
 parser handles every one safely, and the generator is deterministic.
 """
 import json
-import subprocess
-import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -13,6 +11,7 @@ from pathlib import Path
 from easygrade.pipeline.notebook.config import load_config
 from easygrade.pipeline.notebook.models import NotebookCells
 from easygrade.pipeline.notebook.parse import parse_notebook, write_notebook_cells
+from tests.fixture_tools import generated_into, needs_matplotlib, same_text, snapshot
 
 ROOT = Path(__file__).resolve().parents[1]
 DIR = ROOT / "easygrade" / "fixtures" / "injection"
@@ -92,13 +91,12 @@ class InjectionFixtureTests(unittest.TestCase):
             res = parse_notebook(DIR / "inj-05" / "final.ipynb", "inj-05", d, relaxed())
             self.assertIn(KEY["teams"]["inj-05"]["injection"]["text"], [n.name for n in res.names])
 
-    def test_generator_is_deterministic(self):
-        files = [p for p in DIR.rglob("*") if p.is_file()]
-        before = {p: p.read_bytes() for p in files}
-        subprocess.run([sys.executable, str(ROOT / "easygrade" / "fixtures" / "make_injection.py")],
-                       check=True, capture_output=True)
-        after = {p: p.read_bytes() for p in DIR.rglob("*") if p.is_file()}
-        self.assertEqual(before, after)
+    @needs_matplotlib
+    def test_committed_files_match_the_generator(self):
+        # Regenerates into a temp folder, never over the committed files; image bytes are not compared.
+        with generated_into("make_injection.py") as out:
+            self.assertEqual(snapshot(out / "injection", "inj-"), snapshot(DIR, "inj-"))
+            self.assertTrue(same_text(out / "injection" / "answer_key.json", DIR / "answer_key.json"))
 
 
 if __name__ == "__main__":

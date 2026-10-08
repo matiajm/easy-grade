@@ -102,7 +102,7 @@ def apply_style(book, transcript, rng):
         seg["text"] = non_native(seg["text"], rng)
 
 
-def main():
+def main(out: Path = OUT):
     key = {
         "description": "FAKE answer key for batch B (synthetic data, invented students). HOLD-OUT: never tune prompts on "
                        "this set. Used only by evals; never given to the model.",
@@ -114,7 +114,7 @@ def main():
     }
     for idx, team in enumerate(TEAMS):
         rng = random.Random(9000 + idx)
-        folder = OUT / team["id"]
+        folder = out / team["id"]
         folder.mkdir(parents=True, exist_ok=True)
         book, _ = base.build_notebook(team, rng)
         transcript = base.build_transcript(team, rng)
@@ -131,9 +131,14 @@ def main():
         if team.get("group"):
             entry["group"] = team["group"]
         key["teams"][team["id"]] = entry
-    (OUT / "answer_key.json").write_bytes((json.dumps(key, indent=2) + "\n").encode("utf-8"))
-    print(f"wrote {len(TEAMS)} teams to {OUT}")
+    (out / "answer_key.json").write_bytes((json.dumps(key, indent=2) + "\n").encode("utf-8"))
+    print(f"wrote {len(TEAMS)} teams to {out}")
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--out", type=Path, help="write batch_b/ here instead of the repo")
+    a = ap.parse_args()
+    main(a.out / "batch_b" if a.out else OUT)

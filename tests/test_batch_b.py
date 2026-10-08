@@ -1,8 +1,6 @@
 """Batch B (task 2.8): the HOLD-OUT set of 10 fake finals. Never tune prompts on it."""
 import json
 import re
-import subprocess
-import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -12,6 +10,7 @@ import nbformat
 from easygrade.pipeline.notebook.config import load_config
 from easygrade.pipeline.notebook.models import NotebookCells
 from easygrade.pipeline.notebook.parse import parse_notebook, write_notebook_cells
+from tests.fixture_tools import generated_into, needs_matplotlib, same_text, snapshot
 
 ROOT = Path(__file__).resolve().parents[1]
 BATCH = ROOT / "easygrade" / "fixtures" / "batch_b"
@@ -88,11 +87,12 @@ class BatchBFixtureTests(unittest.TestCase):
         text = " ".join(s["text"] for s in transcript["segments"])
         self.assertNotIn(KEY["teams"]["team-014"]["students"][1].split()[0], text)  # the other partner never speaks
 
-    def test_generator_is_deterministic(self):
-        before = {p: p.read_bytes() for p in BATCH.rglob("*") if p.is_file()}
-        subprocess.run([sys.executable, str(ROOT / "easygrade" / "fixtures" / "make_batch_b.py")],
-                       check=True, capture_output=True)
-        self.assertEqual(before, {p: p.read_bytes() for p in BATCH.rglob("*") if p.is_file()})
+    @needs_matplotlib
+    def test_committed_files_match_the_generator(self):
+        # Regenerates into a temp folder, never over the committed files; image bytes are not compared.
+        with generated_into("make_batch_b.py") as out:
+            self.assertEqual(snapshot(out / "batch_b", "team-"), snapshot(BATCH, "team-"))
+            self.assertTrue(same_text(out / "batch_b" / "answer_key.json", BATCH / "answer_key.json"))
 
 
 class BatchBParserTests(unittest.TestCase):
