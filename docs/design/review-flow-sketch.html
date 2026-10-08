@@ -1,0 +1,919 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EasyGrade Review Screens</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+/* Layout: all teams in one list; each row opens a dropdown that explains the grade in three plain sections. */
+:root {
+  --bg: #f5f4f8;
+  --card: #ffffff;
+  --soft: #f8f7fb;
+  --line: #e4e1eb;
+  --fg: #1b1830;
+  --muted: #69637e;
+  --accent: #6d28d9;
+  --accent-fg: #ffffff;
+  --accent-soft: #efe8fc;
+  --track: #ebe8f2;
+  --warn: #8f5400;
+  --warn-soft: #fcf1dc;
+  --ok: #1d7a4a;
+  --ok-soft: #e3f3ea;
+  --font-ui: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111018; --card: #1a1825; --soft: #1f1c2b; --line: #302b42;
+    --fg: #ece9f5; --muted: #a39cb8; --accent: #a78bfa; --accent-fg: #1e1236; --accent-soft: #2a2045; --track: #2a263a;
+    --warn: #f0b457; --warn-soft: #36290f; --ok: #5fd194; --ok-soft: #16301f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111018; --card: #1a1825; --soft: #1f1c2b; --line: #302b42;
+  --fg: #ece9f5; --muted: #a39cb8; --accent: #a78bfa; --accent-fg: #1e1236; --accent-soft: #2a2045; --track: #2a263a;
+  --warn: #f0b457; --warn-soft: #36290f; --ok: #5fd194; --ok-soft: #16301f;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 15px/1.55 var(--font-ui); padding-inline: 16px; padding-block: 36px 64px; }
+.page { max-width: 960px; margin: 0 auto; display: grid; gap: 20px; }
+.num { font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button { font: inherit; color: inherit; cursor: pointer; }
+
+/* Header */
+.head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px 24px; }
+.head h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
+.head .sub { color: var(--muted); margin-top: 2px; }
+.steps { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 0; padding: 12px 16px; list-style: none; background: var(--card); border: 1px solid var(--line); border-radius: 12px; font-size: 14px; color: var(--muted); }
+.steps li { display: flex; gap: 8px; align-items: center; }
+.steps b { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-size: 12px; }
+
+/* List */
+.list { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.cols, .row { display: grid; grid-template-columns: minmax(0, 2.2fr) 110px minmax(0, 2.4fr) minmax(0, 1.2fr) 150px; gap: 16px; align-items: center; padding: 0 20px; }
+.cols { font-size: 12px; font-weight: 600; color: var(--muted); padding-block: 12px; border-bottom: 1px solid var(--line); background: var(--soft); }
+.team { border-bottom: 1px solid var(--line); }
+.team:last-child { border-bottom: 0; }
+.row { padding-block: 16px; }
+.open-btn { all: unset; cursor: pointer; display: flex; gap: 12px; align-items: center; min-width: 0; }
+.open-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 6px; }
+.chev { flex: none; width: 24px; height: 24px; border-radius: 6px; display: grid; place-items: center; background: var(--soft); color: var(--muted); transition: transform .15s; font-size: 14px; }
+.open-btn[aria-expanded="true"] .chev { transform: rotate(90deg); background: var(--accent-soft); color: var(--accent); }
+.names { font-weight: 600; }
+.team-id { font-size: 12px; color: var(--muted); }
+.grade { font-size: 20px; font-weight: 700; }
+.grade small { font-size: 13px; font-weight: 400; color: var(--muted); }
+.attn { font-size: 14px; min-width: 0; }
+.attn .first { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+.attn .more { font-size: 12px; color: var(--muted); }
+.attn.none { color: var(--muted); }
+.tag { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+.tag.warn { background: var(--warn-soft); color: var(--warn); }
+.tag.clear { color: var(--muted); padding-inline: 0; }
+.review-btn { border: 1px solid var(--line); background: var(--card); border-radius: 9px; padding: 8px 12px; font-size: 14px; font-weight: 500; justify-self: end; white-space: nowrap; }
+.review-btn:hover { border-color: var(--accent); color: var(--accent); }
+.review-btn.done { background: var(--ok-soft); border-color: transparent; color: var(--ok); }
+
+/* Dropdown details */
+.details { padding: 4px 20px 24px 56px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 20px 32px; background: var(--soft); border-top: 1px solid var(--line); }
+.overall { grid-column: 1 / -1; margin-top: 16px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: grid; gap: 10px; }
+.overall p { margin: 0; font-size: 15px; max-width: 70ch; }
+.overall .label { font-size: 13px; font-weight: 600; }
+.extremes { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 13px; color: var(--muted); }
+.extremes b { color: var(--fg); font-weight: 600; }
+.details h3 { margin: 16px 0 8px; font-size: 13px; font-weight: 600; color: var(--fg); }
+.details h3 span { font-weight: 400; color: var(--muted); }
+.bullets { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 14px; }
+.ai-box { border-radius: 10px; padding: 12px 14px; font-size: 14px; display: grid; gap: 6px; }
+.ai-box.warn { background: var(--warn-soft); }
+.ai-box.clear { background: var(--card); color: var(--muted); border: 1px solid var(--line); }
+.ai-box .note { font-size: 12.5px; color: var(--muted); }
+.cats { display: grid; gap: 14px; }
+.cat-top { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+.cat-name { font-weight: 500; }
+.cat-score { white-space: nowrap; }
+.cat-score input { width: 56px; font: inherit; text-align: right; border: 1px solid var(--accent); border-radius: 7px; padding: 2px 6px; background: var(--card); }
+.bar { height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; margin: 6px 0 4px; }
+.bar span { display: block; height: 100%; border-radius: 3px; background: var(--accent); }
+.cat-why { font-size: 13px; color: var(--muted); margin: 0; }
+.cat-ev { font: 12px/1.5 var(--font-mono); color: var(--muted); margin: 2px 0 0; overflow-wrap: anywhere; }
+.change-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 14px; }
+.link-btn { background: none; border: 0; padding: 0; color: var(--accent); font-weight: 500; font-size: 14px; }
+.changed { font-size: 13px; color: var(--accent); }
+
+/* Start and progress screens */
+.stack { display: grid; gap: 20px; }
+.start { max-width: 600px; width: 100%; margin: 24px auto 0; display: grid; gap: 18px; }
+.brand { font-size: 13px; font-weight: 600; color: var(--accent); }
+.start h1 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.01em; }
+.start .lead { margin: 0; color: var(--muted); }
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 24px; display: grid; gap: 20px; }
+.field { display: grid; gap: 8px; }
+.field > label, .field > .label { font-size: 14px; font-weight: 600; }
+.field select { font: inherit; color: inherit; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.drop { border: 2px dashed var(--line); border-radius: 14px; padding: 28px 20px; text-align: center; display: grid; gap: 6px; justify-items: center; background: var(--soft); transition: border-color .15s, background .15s; }
+.drop.over { border-color: var(--accent); background: var(--accent-soft); }
+.drop.has-file { border-style: solid; border-color: var(--accent); background: var(--card); }
+.drop .big-line { font-weight: 600; }
+.drop .small { font-size: 13px; color: var(--muted); }
+.file-pick { color: var(--accent); font-weight: 500; text-decoration: underline; cursor: pointer; }
+.file-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.folder { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--soft); }
+.folder.chosen { border-color: var(--accent); background: var(--card); }
+.folder-icon { flex: none; width: 22px; height: 17px; border-radius: 3px; background: var(--accent-soft); border: 2px solid var(--accent); position: relative; }
+.folder-icon::before { content: ""; position: absolute; left: -2px; top: -6px; width: 9px; height: 5px; border-radius: 2px 2px 0 0; background: var(--accent); }
+.folder-path { flex: 1; min-width: 0; font: 13px/1.4 var(--font-mono); color: var(--muted); overflow-wrap: anywhere; }
+.folder.chosen .folder-path { color: var(--fg); }
+.hint { font-size: 13px; color: var(--muted); }
+.preview { border-radius: 12px; padding: 12px 14px; background: var(--soft); display: grid; gap: 6px; font-size: 14px; }
+.preview .ok-line { color: var(--ok); font-weight: 500; }
+.preview .warn-line { color: var(--warn); }
+.privacy { font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: flex-start; }
+.rubric-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.rubric-row select { flex: 1; min-width: 0; }
+.rubric-used { font-size: 13px; color: var(--ok); }
+.rubric-panel { border: 1px dashed var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 10px; background: var(--soft); }
+.rubric-panel .panel-title { font-size: 14px; font-weight: 600; }
+.mini { width: 100%; border-collapse: collapse; font-size: 13px; }
+.mini td { padding: 5px 10px 5px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+.mini tr:last-child td { border-bottom: 0; }
+.mini .ranges { color: var(--muted); }
+.start.wide { max-width: 880px; }
+.match-summary { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: 14px; }
+.match-summary .ok-line { color: var(--ok); font-weight: 500; }
+.match-summary .warn-line { color: var(--warn); font-weight: 500; }
+.match-list { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.m-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) 130px; gap: 12px 20px; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.m-row:last-child { border-bottom: 0; }
+.m-row.needs { background: var(--warn-soft); }
+.m-who b { display: block; font-weight: 600; }
+.m-files { display: grid; gap: 6px; min-width: 0; }
+.m-file { display: grid; grid-template-columns: 70px minmax(0, 1fr); gap: 10px; align-items: center; font-size: 13px; }
+.m-file .ftype { color: var(--muted); }
+.m-file .fname { font: 12.5px/1.4 var(--font-mono); overflow-wrap: anywhere; }
+.m-file .missing { color: var(--warn); font-weight: 500; }
+.m-file select { font: 13px var(--font-ui); color: inherit; background: var(--card); border: 1px solid var(--warn); border-radius: 8px; padding: 6px 8px; max-width: 100%; }
+.m-status { font-size: 13px; font-weight: 600; justify-self: end; text-align: right; }
+.m-status.ok { color: var(--ok); }
+.m-status.warn { color: var(--warn); }
+.m-status.muted { color: var(--muted); font-weight: 500; }
+@media (max-width: 680px) {
+  .m-row { grid-template-columns: minmax(0, 1fr); }
+  .m-status { justify-self: start; text-align: left; }
+}
+.privacy span:first-child { color: var(--ok); }
+.start-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; }
+.steps-run { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.steps-run li { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.state { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+.state.running { border-color: var(--accent); border-top-color: transparent; animation: spin .8s linear infinite; }
+.state.done { background: var(--ok); border-color: var(--ok); color: var(--card); }
+.state.warn { background: var(--warn); border-color: var(--warn); color: var(--card); }
+.steps-run .what { font-weight: 500; }
+.steps-run .what small { display: block; font-weight: 400; color: var(--muted); font-size: 13px; }
+.steps-run .count { color: var(--muted); font-size: 14px; }
+.run-bar { height: 8px; border-radius: 4px; background: var(--track); overflow: hidden; }
+.run-bar span { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s; }
+.found { font-size: 14px; color: var(--muted); }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .state.running { animation: none; } .run-bar span { transition: none; } }
+
+/* Footer */
+.foot { display: flex; flex-wrap: wrap; gap: 12px 20px; justify-content: space-between; align-items: center; }
+.foot .muted { color: var(--muted); font-size: 14px; }
+.btn { border: 1px solid var(--line); background: var(--card); color: var(--fg); border-radius: 10px; padding: 10px 16px; font-weight: 500; }
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn.primary { border: 0; border-radius: 10px; padding: 11px 20px; background: var(--accent); color: var(--accent-fg); font-weight: 600; }
+.btn.primary:hover { color: var(--accent-fg); filter: brightness(1.08); }
+.btn.primary:disabled { opacity: .4; cursor: not-allowed; }
+.toast { color: var(--ok); font-size: 14px; }
+.sketch { font-size: 12px; color: var(--muted); text-align: center; }
+
+@media (max-width: 760px) {
+  .cols { display: none; }
+  .row { grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; }
+  .row .grade { justify-self: end; }
+  .row .attn, .row .ai-cell { grid-column: 1 / -1; padding-left: 36px; }
+  .row .review-btn { grid-column: 1 / -1; justify-self: start; margin-left: 36px; }
+  .details { grid-template-columns: minmax(0, 1fr); padding-left: 20px; }
+}
+@media (prefers-reduced-motion: reduce) { .chev { transition: none; } }
+</style>
+<style>
+body { margin: 0; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="page">
+  <!-- Screen 1: start a batch -->
+  <section id="start-view" class="start" aria-labelledby="start-title">
+    <span class="brand">EasyGrade</span>
+    <h1 id="start-title">Grade a new batch</h1>
+    <p class="lead">Choose the folder that holds this batch's submissions. EasyGrade suggests a grade for each team, and you review them before anything is saved.</p>
+    <div class="panel">
+      <div class="field">
+        <label for="rubric">Rubric</label>
+        <div class="rubric-row">
+        <select id="rubric">
+          <option>CAP3321C Final Project · 200 points · 6 categories</option>
+        </select>
+          <button class="btn" id="replace-rubric" type="button" aria-expanded="false" aria-controls="rubric-panel">Replace rubric</button>
+        </div>
+        <span class="rubric-used" id="rubric-used" hidden></span>
+        <div class="rubric-panel" id="rubric-panel" hidden>
+          <span class="panel-title">Upload the new rubric</span>
+          <span class="hint">An Excel or CSV file made from the EasyGrade rubric template: one row per category level, with its point range. You'll see what was read before it's used.</span>
+          <div class="folder" id="rubric-file">
+            <span class="folder-path" id="rubric-file-name">No file chosen</span>
+            <label class="btn" for="rubric-input">Choose file</label>
+            <input class="file-input" type="file" id="rubric-input" accept=".xlsx,.csv">
+          </div>
+          <button class="link-btn" id="rubric-sample" type="button" style="justify-self:start">Use a sample rubric file</button>
+          <div class="preview" id="rubric-preview" hidden></div>
+          <div class="start-actions" id="rubric-actions" hidden>
+            <button class="link-btn" id="rubric-cancel" type="button">Cancel</button>
+            <button class="btn primary" id="rubric-use" type="button">Use this rubric</button>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <span class="label">Submissions folder</span>
+        <div class="folder" id="folder">
+          <span class="folder-icon" aria-hidden="true"></span>
+          <span class="folder-path" id="folder-path">No folder chosen</span>
+          <button class="btn" id="choose-folder">Choose folder</button>
+        </div>
+        <span class="hint">One folder with every notebook and video. EasyGrade matches them using the student names in the file names.</span>
+        <div class="preview" id="preview" hidden></div>
+      </div>
+      <p class="privacy"><span aria-hidden="true">●</span><span>Everything runs on this computer. Videos never leave it: only the transcripts and notebooks are sent to Claude.</span></p>
+      <div class="start-actions">
+        <button class="link-btn" id="use-sample">Use the sample folder (4 fake teams)</button>
+        <button class="btn primary" id="start-btn" disabled>Continue</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screen 2: check the matches -->
+  <section id="match-view" class="start wide" aria-labelledby="match-title" hidden>
+    <span class="brand">EasyGrade</span>
+    <h1 id="match-title">Check the matches</h1>
+    <p class="lead">EasyGrade matched each notebook to its video using the student names in the file names. Fix anything that looks wrong before grading.</p>
+    <div class="panel">
+      <div class="match-summary" id="match-summary"></div>
+      <div class="match-list" id="match-list"></div>
+      <p class="hint" style="margin:0">Files that don't name a student are listed so you can assign them. Nothing is graded until you start.</p>
+      <div class="start-actions">
+        <button class="link-btn" id="back-to-start">Back</button>
+        <button class="btn primary" id="grade-btn" disabled>Start grading</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screen 2: progress -->
+  <section id="processing-view" class="start" aria-labelledby="run-title" hidden>
+    <span class="brand">EasyGrade</span>
+    <h1 id="run-title">Grading 4 teams</h1>
+    <p class="lead" id="run-lead">This can take a few minutes for a full class. You can leave this window open.</p>
+    <div class="panel">
+      <div class="run-bar" aria-hidden="true"><span id="run-bar"></span></div>
+      <ol class="steps-run" id="steps-run" aria-live="polite"></ol>
+      <p class="found" id="found"></p>
+      <div class="start-actions">
+        <span></span>
+        <button class="btn primary" id="to-review" hidden>Review the grades</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screen 3: review -->
+  <div id="review-view" class="stack" hidden>
+  <div class="head">
+    <div>
+      <h1>CAP3321C Final Project</h1>
+      <div class="sub"><span class="num" id="count">0</span> of 4 teams reviewed · Graded with <span id="graded-with">CAP3321C Final Project rubric</span></div>
+    </div>
+    <button class="link-btn" id="new-batch">Start a new batch</button>
+  </div>
+
+  <ol class="steps" aria-label="How to review">
+    <li><b>1</b>Open a team to see why it got its grade</li>
+    <li><b>2</b>Change a score if you disagree</li>
+    <li><b>3</b>Mark it reviewed. Only reviewed teams go into the Excel</li>
+  </ol>
+
+  <div class="list" role="list">
+    <div class="cols" aria-hidden="true"><span>Students</span><span>Grade</span><span>Needs your attention</span><span>AI usage</span><span></span></div>
+    <div id="teams"></div>
+  </div>
+
+  <div class="foot">
+    <span class="muted" id="foot-note"></span>
+    <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center">
+      <span class="toast" id="toast" role="status"></span>
+      <button class="btn primary" id="download">Download Excel</button>
+    </div>
+  </div>
+
+  </div>
+
+  <p class="sketch">Design sketch with fake teams. Nothing is uploaded or graded here. Wording is a draft.</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script>
+const CATS = [
+  { id: "data_cleaning", name: "Data Cleaning & Preparation", max: 40, ex: 36, good: 28 },
+  { id: "analysis_viz", name: "Analysis & Visualizations", max: 50, ex: 45, good: 35 },
+  { id: "interpretation", name: "Interpretation & Written Summaries", max: 30, ex: 27, good: 21 },
+  { id: "code_quality", name: "Code Quality & Organization", max: 25, ex: 23, good: 17 },
+  { id: "presentation", name: "Presentation of Findings", max: 35, ex: 32, good: 24 },
+  { id: "collaboration", name: "Collaboration & Formatting", max: 20, ex: 18, good: 14 }
+];
+
+// Fake demo teams, ordered so the ones that need attention come first.
+const TEAMS = [
+  {
+    id: "team-04", students: ["Noah Kim", "Emma Lopez"],
+    overall: "The notebook is solid: all four questions are answered with labeled charts and clear summaries. The video was not in the team's folder, so the presentation still needs your score.",
+    scores: { data_cleaning: 33, analysis_viz: 43, interpretation: 24, code_quality: 21, presentation: null, collaboration: 17 },
+    check: ["No video in the team's folder, so Presentation (35 pts) needs your score", "Check Canvas: the video may have been sent as a media recording or a link"],
+    ai: [],
+    reasons: {
+      data_cleaning: ["Duplicates, types and missing values are handled; one decision is not explained.", "Cell 7: “Dropped 52 rows with no ZIP code”"],
+      analysis_viz: ["All four questions answered; one chart could use a legend.", "Cell 14: bar chart of fail rate by ZIP code"],
+      interpretation: ["Summaries explain the results, though Q4's is brief.", "Cell 20: “Seafood restaurants average 4.7 violations per inspection”"],
+      code_quality: ["Runs in order with no errors; a few unused imports.", "Execution order: 1 to 11"],
+      presentation: ["Not graded: no video was found for this team. Watch it in Canvas and enter the score.", "No video in the team folder"],
+      collaboration: ["Header and file name follow the rules; the Responsibilities line is vague.", "Cell 1: “We both worked on everything”"]
+    }
+  },
+  {
+    id: "team-03", students: ["Luis Gomez", "Tara Brooks"],
+    overall: "Incomplete, and worth a conversation with the team. Only one of the four questions was attempted, the notebook does not run cleanly, and the presenter could not explain key parts of the work. The header and file name were the one area done well.",
+    scores: { data_cleaning: 7, analysis_viz: 8, interpretation: 4, code_quality: 6, presentation: 7, collaboration: 18 },
+    check: ["The notebook stops with an error in cell 5", "Cells were run out of order", "Only one partner speaks in the video"],
+    ai: ["Leftover chatbot text in cell 2: “Certainly! Here's…”", "A summary uses a column that is not in the data", "The presenter can't explain the outlier code (00:23)", "The talk describes a join the notebook never does (00:32)"],
+    reasons: {
+      data_cleaning: ["The only cleaning cell stops with an error, so nothing is cleaned.", "Cell 5: NameError: name 'df_raw' is not defined"],
+      analysis_viz: ["Only Q2 is answered, it counts fails instead of fail rates, and the chart has no labels.", "Cell 9: chart with no title or axis labels"],
+      interpretation: ["One summary, and it uses a column that is not in the data.", "Cell 10: “customer_satisfaction_score”"],
+      code_quality: ["Cells were run out of order and one cell has an error.", "Execution order: 7, 2, 12, 5, 9"],
+      presentation: ["One presenter, 1:06 long, unsure how the outlier step works.", "00:23 “I'm not really sure how the outlier part works”"],
+      collaboration: ["Header and file name follow the rules.", "Cell 1: responsibilities listed for both students"]
+    }
+  },
+  {
+    id: "team-02", students: ["Priya Patel", "David Okafor"],
+    overall: "Solid analysis held back by the basics. All four questions are answered with mostly clear charts, but the cleaning was left half done, the written summaries mostly repeat the numbers, and the submission rules were not followed.",
+    scores: { data_cleaning: 25, analysis_viz: 41, interpretation: 22, code_quality: 20, presentation: 22, collaboration: 10 },
+    check: ["Hidden text in the notebook asks for full marks (it was ignored)", "File name and header don't follow the submission rules", "The second partner barely speaks"],
+    ai: [],
+    reasons: {
+      data_cleaning: ["Duplicates and dates are handled, but score stays as text.", "Cell 6 output: score  object"],
+      analysis_viz: ["All four questions answered; the monthly chart has no axis labels.", "Cell 13: line chart without axis labels"],
+      interpretation: ["Every question has a summary, but most only restate numbers.", "Cell 7: “There are 2432 rows left after cleaning.”"],
+      code_quality: ["Runs in order with no errors; sparse comments.", "Cell 12: variable named v"],
+      presentation: ["Covers every question, but 1:08 long and the second partner says one sentence.", "00:55 “I helped with the zip code chart”"],
+      collaboration: ["File name is wrong and the Responsibilities line is missing.", "patel-okafor final.ipynb"]
+    }
+  },
+  {
+    id: "team-01", students: ["Ana Rivera", "Marcus Chen"],
+    overall: "Strong work across the board. Cleaning, analysis and charts are thorough and well explained, and both partners presented. The only small gaps are one leftover code cell and one claim without data behind it.",
+    scores: { data_cleaning: 39, analysis_viz: 48, interpretation: 28, code_quality: 23, presentation: 32, collaboration: 20 },
+    check: ["Confirm who presented Q3 and Q4"],
+    ai: [],
+    reasons: {
+      data_cleaning: ["Every step is done and explained; the row counts add up.", "Cell 8: 36 duplicate IDs, 41 non-numeric scores"],
+      analysis_viz: ["All four questions answered with clear, labeled charts.", "Cell 15: “Top 10 ZIP Codes by Inspection Fail Rate (2025)”"],
+      interpretation: ["Summaries explain what results mean, with one unsupported claim.", "Cell 16: “almost double the county average of 9.6%”"],
+      code_quality: ["Clean and in order; one leftover unused cell.", "Cell 25: tmp = … (never used)"],
+      presentation: ["Clear walk through all four questions; both partners speak.", "00:32 “I worked on question 2”"],
+      collaboration: ["Header complete, file named correctly, work split by question.", "Cell 1: responsibilities for both students"]
+    }
+  }
+];
+
+const state = Object.fromEntries(TEAMS.map((t, i) => [t.id, { open: i === 0, editing: false, reviewed: false, scores: { ...t.scores } }]));
+
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+// A score of null means the tool could not grade that category (for example, no video).
+const total = (t, scores = state[t.id].scores) => CATS.reduce((sum, c) => sum + (scores[c.id] == null ? 0 : Number(scores[c.id])), 0);
+const level = (c, s) => s == null ? "Needs your score" : s >= c.ex ? "Excellent" : s >= c.good ? "Good" : "Needs work";
+const missing = t => CATS.filter(c => state[t.id].scores[c.id] == null);
+const diffFromSuggestion = t => CATS.reduce((sum, c) => t.scores[c.id] == null ? sum : sum + (state[t.id].scores[c.id] - t.scores[c.id]), 0);
+
+function teamHtml(t) {
+  const st = state[t.id];
+  const diff = diffFromSuggestion(t);
+  const gaps = missing(t);
+  const row = `<div class="row">
+      <button class="open-btn" data-toggle="${t.id}" aria-expanded="${st.open}" aria-controls="d-${t.id}">
+        <span class="chev" aria-hidden="true">›</span>
+        <span><span class="names">${t.students.map(esc).join(" & ")}</span><br><span class="team-id">${esc(t.id)}</span></span>
+      </button>
+      ${gaps.length
+        ? `<span class="grade num">${total(t)} <small>so far</small><br><span class="tag warn" style="font-size:12px">Incomplete</span></span>`
+        : `<span class="grade num">${total(t)} <small>/ 200</small></span>`}
+      <span class="attn ${t.check.length ? "" : "none"}">${t.check.length
+        ? `<span class="first">${esc(t.check[0])}</span>${t.check.length > 1 ? `<span class="more">+${t.check.length - 1} more</span>` : ""}`
+        : "Nothing to check"}</span>
+      <span class="ai-cell">${t.ai.length ? `<span class="tag warn">Take a look</span>` : `<span class="tag clear">No signals</span>`}</span>
+      ${gaps.length
+        ? `<button class="review-btn" data-fill="${t.id}" title="Add the missing score first">Add missing score</button>`
+        : `<button class="review-btn ${st.reviewed ? "done" : ""}" data-review="${t.id}">${st.reviewed ? "Reviewed ✓" : "Mark reviewed"}</button>`}
+    </div>`;
+  if (!st.open) return `<div class="team" role="listitem">${row}</div>`;
+  // Strongest and weakest categories come from the current scores, so they follow any change.
+  const pct = c => st.scores[c.id] / c.max;
+  const byPct = CATS.filter(c => st.scores[c.id] != null).sort((a, b) => pct(b) - pct(a));
+  const strongest = byPct[0], weakest = byPct[byPct.length - 1];
+  const details = `<div class="details" id="d-${t.id}">
+      <div class="overall">
+        <span class="label">Overall</span>
+        <p>${esc(t.overall)}</p>
+        <div class="extremes">
+          <span>Strongest: <b>${esc(strongest.name)}</b> <span class="num">${st.scores[strongest.id]}/${strongest.max}</span></span>
+          <span>Weakest: <b>${esc(weakest.name)}</b> <span class="num">${st.scores[weakest.id]}/${weakest.max}</span></span>
+        </div>
+      </div>
+      <div>
+        <h3>What to check</h3>
+        ${t.check.length ? `<ul class="bullets">${t.check.map(c => `<li>${esc(c)}</li>`).join("")}</ul>` : `<p class="cat-why">Nothing to check.</p>`}
+        <h3>AI usage</h3>
+        ${t.ai.length
+          ? `<div class="ai-box warn"><ul class="bullets">${t.ai.map(a => `<li>${esc(a)}</li>`).join("")}</ul><span class="note">A reason to look closer, never a penalty. It does not change the grade.</span></div>`
+          : `<div class="ai-box clear">No signals found.</div>`}
+      </div>
+      <div>
+        <h3>How the grade adds up <span>· ${total(t)} of 200</span></h3>
+        <div class="cats">${CATS.map(c => {
+          const s = st.scores[c.id];
+          return `<div>
+            <div class="cat-top"><span class="cat-name">${esc(c.name)}</span>
+              <span class="cat-score num">${st.editing || t.scores[c.id] == null
+                ? `<label for="in-${t.id}-${c.id}" style="position:absolute;left:-9999px">${esc(c.name)} score</label><input id="in-${t.id}-${c.id}" type="number" min="0" max="${c.max}" value="${s ?? ""}" placeholder="—" data-team="${t.id}" data-cat="${c.id}">`
+                : `<b>${s}</b>`} / ${c.max} · ${s == null ? `<span style="color:var(--warn);font-weight:600">Needs your score</span>` : level(c, s)}</span></div>
+            <div class="bar" aria-hidden="true"><span style="width:${s == null ? 0 : Math.round(100 * s / c.max)}%"></span></div>
+            <p class="cat-why">${esc(t.reasons[c.id][0])}</p>
+            <p class="cat-ev">${esc(t.reasons[c.id][1])}</p>
+          </div>`;
+        }).join("")}</div>
+        <div class="change-row">
+          ${st.editing
+            ? `<button class="link-btn" data-done="${t.id}">Done changing</button><button class="link-btn" data-reset="${t.id}">Reset to suggestion</button>`
+            : `<button class="link-btn" data-edit="${t.id}">Change a score</button>`}
+          ${diff ? `<span class="changed num">${diff > 0 ? "+" : ""}${diff} from the suggestion</span>` : ""}
+        </div>
+      </div>
+    </div>`;
+  return `<div class="team" role="listitem">${row}${details}</div>`;
+}
+
+function render() {
+  document.getElementById("teams").innerHTML = TEAMS.map(teamHtml).join("");
+  const reviewed = TEAMS.filter(t => state[t.id].reviewed);
+  document.getElementById("count").textContent = reviewed.length;
+  const left = TEAMS.length - reviewed.length;
+  document.getElementById("foot-note").textContent = left
+    ? `${left} team${left > 1 ? "s" : ""} not reviewed yet will be left out of the Excel.`
+    : "All teams reviewed.";
+  const btn = document.getElementById("download");
+  btn.disabled = reviewed.length === 0;
+}
+
+document.addEventListener("click", e => {
+  const el = e.target.closest("[data-toggle],[data-review],[data-edit],[data-done],[data-reset],[data-fill],#download");
+  if (!el) return;
+  if (el.id === "download") { downloadExcel(); return; }
+  const d = el.dataset;
+  if (d.toggle) { const st = state[d.toggle]; st.open = !st.open; if (!st.open) st.editing = false; }
+  if (d.review) {
+    const t = TEAMS.find(x => x.id === d.review); const st = state[t.id];
+    if (missing(t).length) return; // a team with a missing score cannot be marked reviewed
+    st.reviewed = !st.reviewed; if (st.reviewed) { st.editing = false; st.open = false; }
+  }
+  if (d.edit) { state[d.edit].editing = true; state[d.edit].reviewed = false; }
+  if (d.done) { state[d.done].editing = false; }
+  if (d.reset) { const t = TEAMS.find(x => x.id === d.reset); state[t.id].scores = { ...t.scores }; state[t.id].editing = false; }
+  document.getElementById("toast").textContent = "";
+  render();
+  if (d.edit) document.querySelector(`[data-team="${d.edit}"]`)?.focus();
+  if (d.fill) {
+    state[d.fill].open = true; render();
+    const gap = missing(TEAMS.find(x => x.id === d.fill))[0];
+    if (gap) document.getElementById(`in-${d.fill}-${gap.id}`)?.focus();
+  }
+});
+
+document.addEventListener("change", e => {
+  const d = e.target.dataset;
+  if (!d.cat) return;
+  const c = CATS.find(x => x.id === d.cat);
+  if (e.target.value.trim() === "") { state[d.team].scores[c.id] = null; state[d.team].reviewed = false; render(); return; }
+  const v = Math.round(Number(e.target.value));
+  if (Number.isFinite(v) && v >= 0 && v <= c.max) state[d.team].scores[c.id] = v;
+  render();
+  document.getElementById(`in-${d.team}-${c.id}`)?.focus();
+});
+
+/* Download: builds the styled Excel (Grades, Details, Rubric) from the teams marked reviewed.
+   docs/design/grades_example.xlsx is generated by this same code, so both always look alike. */
+const XL = { ink: "FF1B1830", muted: "FF6A6480", violet: "FF3B2F63", stripe: "FFF7F5FB", band: "FFEFE8FC", edit: "FFFFF7D6",
+  line: "FFE4E1EB", ok: "FF1D7A4A", okSoft: "FFE3F3EA", warn: "FF8F5400", warnSoft: "FFFCF1DC", goodSoft: "FFEEEDF6" };
+const xlFill = argb => ({ type: "pattern", pattern: "solid", fgColor: { argb } });
+const xlCfFill = argb => ({ type: "pattern", pattern: "solid", bgColor: { argb } });
+const LEVEL_LABEL = (c, s) => s >= c.ex ? "Excellent" : s >= c.good ? "Good" : "Needs Work";
+
+function attentionText(t) {
+  const st = state[t.id];
+  const entered = CATS.filter(c => t.scores[c.id] == null && st.scores[c.id] != null);
+  let items = t.check.map(x => entered.length && x.startsWith("No video")
+    ? "No video in the team's folder; you entered the Presentation score" : x);
+  const diff = diffFromSuggestion(t);
+  if (diff) items = items.concat(`You changed the suggested score by ${diff > 0 ? "+" : ""}${diff}`);
+  return items.join("; ");
+}
+const aiText = t => t.ai.length ? "Review: " + t.ai.join("; ") : "No concern";
+
+function xlTitle(ws, text, subtitle) {
+  ws.getCell("A1").value = text;
+  ws.getCell("A1").font = { name: "Arial", size: 16, bold: true, color: { argb: XL.ink } };
+  ws.getCell("A2").value = subtitle;
+  ws.getCell("A2").font = { name: "Arial", size: 10, italic: true, color: { argb: XL.muted } };
+  ws.getRow(1).height = 26;
+  ws.getRow(3).height = 8;
+}
+function xlHeader(ws, labels) {
+  const row = ws.getRow(4);
+  row.height = 24;
+  labels.forEach((label, i) => {
+    const c = row.getCell(i + 1);
+    c.value = label;
+    c.font = { name: "Arial", size: 11, bold: true, color: { argb: "FFFFFFFF" } };
+    c.fill = xlFill(XL.violet);
+    c.alignment = { vertical: "middle", wrapText: true, indent: 1 };
+  });
+}
+function xlPut(ws, r, col, value, o = {}) {
+  const c = ws.getRow(r).getCell(col);
+  c.value = value;
+  c.font = { name: "Arial", size: o.size || 11, bold: !!o.bold, color: { argb: o.color || XL.ink } };
+  c.alignment = o.center ? { vertical: "top", horizontal: "center" } : { vertical: "top", wrapText: true, indent: 1 };
+  c.border = { bottom: { style: "thin", color: { argb: XL.line } } };
+  if (o.fill) c.fill = xlFill(o.fill);
+  return c;
+}
+// Excel files don't auto-size wrapped rows, so estimate the lines from text length and column width.
+function xlFit(ws, r, widths, texts) {
+  const lines = Math.max(1, ...texts.map((t, i) => t ? Math.ceil(String(t).length / Math.max(widths[i] * 1.25, 1)) : 1));
+  ws.getRow(r).height = Math.max(20, 15 * lines + 6);
+}
+
+function buildWorkbook() {
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "EasyGrade";
+  const reviewed = TEAMS.filter(t => state[t.id].reviewed);
+  const view = () => [{ state: "frozen", ySplit: 4, showGridLines: false }];
+  const gs = wb.addWorksheet("Grades", { views: view() });
+  const ds = wb.addWorksheet("Details", { views: view() });
+  const rs = wb.addWorksheet("Rubric", { views: view() });
+
+  // Rubric: the point ranges the formulas read.
+  xlTitle(rs, "Rubric", "CAP3321C Final Project Rubric · 200 points. Each level's range ends where the next level starts.");
+  xlHeader(rs, ["Category", "Points", "Excellent from", "Good from", "Needs Work"]);
+  CATS.forEach((c, i) => {
+    const r = 5 + i, fill = r % 2 === 0 ? XL.stripe : null;
+    xlPut(rs, r, 1, c.name, { fill });
+    xlPut(rs, r, 2, c.max, { center: true, fill });
+    xlPut(rs, r, 3, c.ex, { center: true, fill });
+    xlPut(rs, r, 4, c.good, { center: true, fill });
+    xlPut(rs, r, 5, { formula: `"0 to "&(D${r}-1)`, result: `0 to ${c.good - 1}` }, { center: true, fill });
+  });
+  const rt = 5 + CATS.length;
+  xlPut(rs, rt, 1, "Total", { bold: true });
+  xlPut(rs, rt, 2, { formula: `SUM(B5:B${rt - 1})`, result: CATS.reduce((s, c) => s + c.max, 0) }, { bold: true, center: true });
+  [38, 10, 16, 12, 14].forEach((w, i) => { rs.getColumn(i + 1).width = w; });
+  const RA = `Rubric!$A$5:$A$${rt - 1}`, RB = `Rubric!$B$5:$B$${rt - 1}`, RC = `Rubric!$C$5:$C$${rt - 1}`, RD = `Rubric!$D$5:$D$${rt - 1}`;
+
+  // Details: a band per team, one row per category, then the team total.
+  xlTitle(ds, "How each grade adds up", "Yellow scores can be changed. The level, the team total and the Grades tab update.");
+  xlHeader(ds, ["Team", "Students", "Category", "Level", "Score", "Out of", "Why this score", "Evidence"]);
+  const DW = [11, 24, 35, 13, 9, 9, 55, 50];
+  let r = 5;
+  for (const t of reviewed) {
+    const st = state[t.id];
+    // Column B stays empty on band and total rows, so the Grades lookup never counts them twice.
+    ds.mergeCells(r, 1, r, 8);
+    const band = ds.getRow(r).getCell(1);
+    band.value = `${t.id}  ·  ${t.students.join(", ")}`;
+    band.font = { name: "Arial", size: 11, bold: true, color: { argb: XL.violet } };
+    band.fill = xlFill(XL.band);
+    band.alignment = { vertical: "middle", indent: 1 };
+    ds.getRow(r).height = 22;
+    r++;
+    const start = r;
+    for (const c of CATS) {
+      const s = st.scores[c.id];
+      const entered = t.scores[c.id] == null;
+      const why = entered ? "Entered by the professor: no video in the team's folder." : t.reasons[c.id][0];
+      const ev = entered ? "" : t.reasons[c.id][1];
+      xlPut(ds, r, 1, t.id, { color: XL.muted, size: 10 });
+      xlPut(ds, r, 2, t.students.join(", "), { color: XL.muted, size: 10 });
+      xlPut(ds, r, 3, c.name);
+      xlPut(ds, r, 4, { formula: `IF(E${r}>=INDEX(${RC},MATCH(C${r},${RA},0)),"Excellent",IF(E${r}>=INDEX(${RD},MATCH(C${r},${RA},0)),"Good","Needs Work"))`, result: LEVEL_LABEL(c, s) }, { center: true });
+      xlPut(ds, r, 5, s, { bold: true, center: true, fill: XL.edit });
+      xlPut(ds, r, 6, { formula: `INDEX(${RB},MATCH(C${r},${RA},0))`, result: c.max }, { center: true, color: XL.muted });
+      xlPut(ds, r, 7, why);
+      xlPut(ds, r, 8, ev, { color: XL.muted, size: 10 });
+      xlFit(ds, r, DW, ["", "", c.name, "", "", "", why, ev]);
+      r++;
+    }
+    [1, 2, 4, 7, 8].forEach(col => xlPut(ds, r, col, null, { fill: XL.stripe }));
+    xlPut(ds, r, 3, "Team total", { bold: true, fill: XL.stripe });
+    xlPut(ds, r, 5, { formula: `SUM(E${start}:E${r - 1})`, result: total(t) }, { bold: true, center: true, fill: XL.stripe });
+    xlPut(ds, r, 6, { formula: `SUM(F${start}:F${r - 1})`, result: CATS.reduce((sum, c) => sum + c.max, 0) }, { bold: true, center: true, fill: XL.stripe });
+    ds.getRow(r).height = 22;
+    r += 2;
+  }
+  const end = r;
+  DW.forEach((w, i) => { ds.getColumn(i + 1).width = w; });
+  ds.addConditionalFormatting({ ref: `D5:D${end}`, rules: [
+    { type: "expression", priority: 1, formulae: ['$D5="Excellent"'], style: { font: { color: { argb: XL.ok }, bold: true }, fill: xlCfFill(XL.okSoft) } },
+    { type: "expression", priority: 2, formulae: ['$D5="Good"'], style: { font: { color: { argb: XL.violet }, bold: true }, fill: xlCfFill(XL.goodSoft) } },
+    { type: "expression", priority: 3, formulae: ['$D5="Needs Work"'], style: { font: { color: { argb: XL.warn }, bold: true }, fill: xlCfFill(XL.warnSoft) } }
+  ] });
+
+  // Grades: what the professor asked for. Each score adds up the student's team rows on Details.
+  xlTitle(gs, "CAP3321C Final Project", "Grades for the teams you reviewed. The breakdown behind each score is on the Details tab.");
+  xlHeader(gs, ["Student name", "Score (out of 200)", "Needs your attention", "AI usage"]);
+  const GW = [22, 19, 70, 55];
+  let g = 5;
+  for (const t of reviewed) {
+    for (const name of t.students) {
+      const fill = g % 2 === 0 ? XL.stripe : null, att = attentionText(t), ai = aiText(t);
+      xlPut(gs, g, 1, name, { bold: true, fill });
+      xlPut(gs, g, 2, { formula: `SUMIFS(Details!$E$5:$E$${end},Details!$B$5:$B$${end},"*"&A${g}&"*")`, result: total(t) }, { bold: true, size: 12, center: true, fill });
+      xlPut(gs, g, 3, att, { fill });
+      xlPut(gs, g, 4, ai, { fill });
+      xlFit(gs, g, GW, [name, "", att, ai]);
+      g++;
+    }
+  }
+  GW.forEach((w, i) => { gs.getColumn(i + 1).width = w; });
+  if (g > 5) gs.addConditionalFormatting({ ref: `D5:D${g - 1}`, rules: [
+    { type: "expression", priority: 1, formulae: ['LEFT($D5,6)="Review"'], style: { font: { color: { argb: XL.warn }, bold: true }, fill: xlCfFill(XL.warnSoft) } },
+    { type: "expression", priority: 2, formulae: ['$D5="No concern"'], style: { font: { color: { argb: XL.ok } } } }
+  ] });
+  return wb;
+}
+
+async function downloadExcel() {
+  const toast = document.getElementById("toast");
+  if (!window.ExcelJS) { toast.textContent = "The Excel library didn't load. Check your internet connection and try again."; return; }
+  const filename = "EasyGrade_grades.xlsx";
+  const blob = new Blob([await buildWorkbook().xlsx.writeBuffer()], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  // Inside Claude the page asks the viewer to confirm the save. Opened as a plain web page (the repo copy), the browser downloads it.
+  const downloads = window.claude && typeof window.claude.use === "function" ? await window.claude.use("downloads") : null;
+  if (downloads) {
+    try {
+      await downloads.save({ filename, data: blob });
+      toast.textContent = `Saved ${filename} (Grades, Details and Rubric tabs).`;
+    } catch (e) {
+      const code = e && e.code;
+      toast.textContent = code === "declined" ? "Download cancelled." : code === "rate_limited" ? "A save prompt is already open." : "Downloads aren't available in this view.";
+    }
+    return;
+  }
+  if (window.claude) { toast.textContent = "Downloads aren't available in this view."; return; }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  toast.textContent = `Downloaded ${filename} (Grades, Details and Rubric tabs).`;
+}
+
+/* Start and progress screens (simulated: the sketch never reads or uploads the file) */
+const views = ["start-view", "match-view", "processing-view", "review-view"];
+function showView(id) {
+  views.forEach(v => { document.getElementById(v).hidden = v !== id; });
+  window.scrollTo(0, 0);
+}
+
+// The real app opens the system folder picker and remembers the last folder. The sketch uses a sample path.
+const SAMPLE_FOLDER = "~/Documents/CAP3321C/Final Project/Submissions";
+function chooseFolder(path) {
+  const box = document.getElementById("folder");
+  box.classList.add("chosen");
+  document.getElementById("folder-path").textContent = path;
+  document.getElementById("choose-folder").textContent = "Change folder";
+  const preview = document.getElementById("preview");
+  preview.innerHTML = `<span class="ok-line">Found ${MATCHES.length} notebooks and ${MATCHES.filter(m => m.video).length + UNMATCHED.length} videos</span>
+    <span class="warn-line">${UNMATCHED.length} video doesn't name a student. You'll match it on the next step.</span>`;
+  preview.hidden = false;
+  document.getElementById("start-btn").disabled = false;
+}
+document.getElementById("choose-folder").addEventListener("click", () => chooseFolder(SAMPLE_FOLDER));
+document.getElementById("use-sample").addEventListener("click", () => chooseFolder(SAMPLE_FOLDER));
+
+const RUN_STEPS = [
+  { what: "Finding each team's notebook and video", detail: "Looks inside each team's folder" },
+  { what: "Transcribing videos on this computer", detail: "The videos stay here" },
+  { what: "Reading the notebooks", detail: "Code, outputs, charts and the header" },
+  { what: "Suggesting grades with the rubric", detail: "Every score comes with evidence" }
+];
+let timers = [];
+function runBatch() {
+  document.getElementById("graded-with").textContent = rubricSelect.options[rubricSelect.selectedIndex].text.split(" · ")[0] + " rubric";
+  timers.forEach(clearTimeout); timers = [];
+  showView("processing-view");
+  document.getElementById("to-review").hidden = true;
+  const N = TEAMS.length;
+  const noVideo = TEAMS.filter(t => t.scores.presentation == null).length;
+  document.getElementById("run-title").textContent = `Grading ${N} teams`;
+  document.getElementById("found").textContent = "";
+  const progress = RUN_STEPS.map(() => ({ state: "waiting", n: 0 }));
+  // Step 2 (transcribing) can only finish the teams that sent a video.
+  const target = i => i === 1 ? N - noVideo : N;
+  const draw = () => {
+    document.getElementById("steps-run").innerHTML = RUN_STEPS.map((s, i) => {
+      const p = progress[i];
+      const extra = i === 1 && p.state === "warn" ? ` · ${noVideo} video missing` : "";
+      return `<li><span class="state ${p.state}" aria-hidden="true">${p.state === "done" ? "✓" : p.state === "warn" ? "!" : ""}</span>
+        <span class="what">${s.what}<small>${s.detail}</small></span>
+        <span class="count num">${p.state === "waiting" ? "" : `${p.n} of ${N}${extra}`}</span></li>`;
+    }).join("");
+    const doneUnits = progress.reduce((sum, p, i) => sum + p.n + (p.state === "warn" ? N - target(i) : 0), 0);
+    document.getElementById("run-bar").style.width = `${Math.round(100 * doneUnits / (RUN_STEPS.length * N))}%`;
+  };
+  let t = 0;
+  RUN_STEPS.forEach((_, i) => {
+    timers.push(setTimeout(() => { progress[i].state = "running"; draw(); }, t));
+    for (let n = 1; n <= target(i); n++) {
+      t += 300;
+      timers.push(setTimeout(() => {
+        progress[i].n = n;
+        if (n === target(i)) progress[i].state = target(i) < N ? "warn" : "done";
+        draw();
+        if (i === 0 && n === N) document.getElementById("found").textContent =
+          `${N} teams found. ` + (noVideo ? `${noVideo} team has no video, so you'll add its presentation score yourself. ` : "Every team has a notebook and a video. ") + "1 file name doesn't follow the submission rules.";
+      }, t));
+    }
+    t += 150;
+  });
+  timers.push(setTimeout(() => {
+    document.getElementById("run-title").textContent = `Done: ${N} teams are ready for your review`;
+    document.getElementById("run-lead").textContent = "Grades are suggestions until you mark each team reviewed." + (noVideo ? ` ${noVideo} team needs a score from you.` : "");
+    const btn = document.getElementById("to-review");
+    btn.hidden = false; btn.focus();
+  }, t + 200));
+  draw();
+}
+/* Matching (Lucas's Ingest step): files are matched by the student names in Canvas-style file names. Fake file names. */
+const MATCHES = [
+  { team: "team-04", notebook: "kimnoah_1107_88107_Kim_Lopez_FinalProject.ipynb", video: null },
+  { team: "team-03", notebook: "gomezluis_1105_88105_Gomez_Brooks_FinalProject.ipynb", video: "gomezluis_1105_88105_presentation.mov" },
+  { team: "team-02", notebook: "patelpriya_1103_88103_patel-okafor final.ipynb", video: "patelpriya_1103_88103_final_video.mp4" },
+  { team: "team-01", notebook: "riveraana_1101_88101_Rivera_Chen_FinalProject.ipynb", video: "riveraana_1101_88101_presentation.mp4" }
+];
+const UNMATCHED = ["IMG_4821.MOV"];
+const matchChoice = {}; // team id -> "" (not decided), a file name, or "none"
+
+// team-04 with and without its video, so the review matches what the professor chose here.
+const T4 = TEAMS.find(t => t.id === "team-04");
+const T4_BASE = JSON.parse(JSON.stringify(T4));
+const T4_WITH_VIDEO = {
+  presentation: 27,
+  reason: ["Both partners walk through the findings and refer to the charts; it spends a long time on cleaning.", "01:12 “Our biggest finding was seafood restaurants”"],
+  check: ["You matched the video by hand (IMG_4821.MOV). Confirm it belongs to this team"],
+  overall: "Solid work overall: all four questions are answered with labeled charts and clear summaries, and both partners present. The video was matched by hand, so confirm it is theirs."
+};
+
+function renderMatch() {
+  const rows = MATCHES.map(m => {
+    const t = TEAMS.find(x => x.id === m.team);
+    const choice = matchChoice[m.team];
+    const needs = !m.video && !choice;
+    const videoCell = m.video
+      ? `<span class="fname">${esc(m.video)}</span>`
+      : `<label style="position:absolute;left:-9999px" for="pick-${m.team}">Video for ${esc(m.team)}</label>
+         <select id="pick-${m.team}" data-pick="${m.team}">
+           <option value="" ${!choice ? "selected" : ""}>Not found. Choose a video…</option>
+           ${UNMATCHED.map(f => `<option value="${esc(f)}" ${choice === f ? "selected" : ""}>${esc(f)} (doesn't name a student)</option>`).join("")}
+           <option value="none" ${choice === "none" ? "selected" : ""}>No video for this team</option>
+         </select>`;
+    const status = m.video ? `<span class="m-status ok">✓ Matched by name</span>`
+      : !choice ? `<span class="m-status warn">Needs you</span>`
+      : choice === "none" ? `<span class="m-status muted">No video: you'll grade the presentation</span>`
+      : `<span class="m-status ok">✓ Matched by you</span>`;
+    return `<div class="m-row ${needs ? "needs" : ""}">
+      <div class="m-who"><b>${t.students.map(esc).join(" & ")}</b><span class="team-id">${esc(t.id)}</span></div>
+      <div class="m-files">
+        <div class="m-file"><span class="ftype">Notebook</span><span class="fname">${esc(m.notebook)}</span></div>
+        <div class="m-file"><span class="ftype">Video</span>${videoCell}</div>
+      </div>
+      ${status}
+    </div>`;
+  }).join("");
+  document.getElementById("match-list").innerHTML = rows;
+  const auto = MATCHES.filter(m => m.video).length;
+  const open = MATCHES.filter(m => !m.video && !matchChoice[m.team]).length;
+  document.getElementById("match-summary").innerHTML = `<span class="ok-line">${auto} of ${MATCHES.length} teams matched automatically</span>
+    ${open ? `<span class="warn-line">${open} needs you</span>` : `<span class="ok-line">All set</span>`}`;
+  document.getElementById("grade-btn").disabled = open > 0;
+}
+
+function applyMatches() {
+  const choice = matchChoice["team-04"];
+  Object.assign(T4, JSON.parse(JSON.stringify(T4_BASE)));
+  if (choice && choice !== "none") {
+    T4.scores.presentation = T4_WITH_VIDEO.presentation;
+    T4.reasons.presentation = T4_WITH_VIDEO.reason;
+    T4.check = T4_WITH_VIDEO.check;
+    T4.overall = T4_WITH_VIDEO.overall;
+  }
+  // A new batch starts fresh: nothing reviewed, suggestions restored.
+  TEAMS.forEach((t, i) => { state[t.id] = { open: i === 0, editing: false, reviewed: false, scores: { ...t.scores } }; });
+}
+
+document.getElementById("start-btn").addEventListener("click", () => { showView("match-view"); renderMatch(); });
+document.getElementById("back-to-start").addEventListener("click", () => showView("start-view"));
+document.getElementById("grade-btn").addEventListener("click", () => { applyMatches(); runBatch(); });
+
+/* Replace rubric (uses Ingest's rubric import). The sketch can't read the file, so any file shows the sample rubric. */
+const rubricSelect = document.getElementById("rubric");
+const rubricPanel = document.getElementById("rubric-panel");
+let pendingRubricFile = null;
+function resetRubricPanel() {
+  pendingRubricFile = null;
+  document.getElementById("rubric-file-name").textContent = "No file chosen";
+  document.getElementById("rubric-file").classList.remove("chosen");
+  document.getElementById("rubric-preview").hidden = true;
+  document.getElementById("rubric-actions").hidden = true;
+  document.getElementById("rubric-input").value = "";
+}
+function previewRubric(fileName) {
+  pendingRubricFile = fileName;
+  document.getElementById("rubric-file-name").textContent = fileName;
+  document.getElementById("rubric-file").classList.add("chosen");
+  const points = CATS.reduce((sum, c) => sum + c.max, 0);
+  const preview = document.getElementById("rubric-preview");
+  preview.innerHTML = `<span class="ok-line">✓ Read ${CATS.length} categories with 3 levels each. The points add up to ${points}.</span>
+    <table class="mini">${CATS.map(c => `<tr><td>${esc(c.name)}</td><td class="num">${c.max} pts</td>
+      <td class="ranges num">Excellent ${c.ex}–${c.max} · Good ${c.good}–${c.ex - 1} · Needs work 0–${c.good - 1}</td></tr>`).join("")}</table>`;
+  preview.hidden = false;
+  document.getElementById("rubric-actions").hidden = false;
+}
+document.getElementById("replace-rubric").addEventListener("click", e => {
+  rubricPanel.hidden = !rubricPanel.hidden;
+  e.currentTarget.setAttribute("aria-expanded", String(!rubricPanel.hidden));
+  if (rubricPanel.hidden) resetRubricPanel();
+});
+document.getElementById("rubric-input").addEventListener("change", e => {
+  const f = e.target.files && e.target.files[0];
+  if (f) previewRubric(f.name);
+});
+document.getElementById("rubric-sample").addEventListener("click", () => previewRubric("CAP3321C_Final_Rubric_Fall2026.xlsx"));
+document.getElementById("rubric-cancel").addEventListener("click", () => {
+  rubricPanel.hidden = true;
+  document.getElementById("replace-rubric").setAttribute("aria-expanded", "false");
+  resetRubricPanel();
+});
+document.getElementById("rubric-use").addEventListener("click", () => {
+  const label = `${pendingRubricFile.replace(/\.(xlsx|csv)$/i, "")} · ${CATS.reduce((s, c) => s + c.max, 0)} points · ${CATS.length} categories`;
+  const option = new Option(label, label, true, true);
+  rubricSelect.add(option);
+  rubricSelect.value = label;
+  const used = document.getElementById("rubric-used");
+  used.textContent = `✓ Using the rubric from ${pendingRubricFile}`;
+  used.hidden = false;
+  rubricPanel.hidden = true;
+  document.getElementById("replace-rubric").setAttribute("aria-expanded", "false");
+  resetRubricPanel();
+});
+rubricSelect.addEventListener("change", () => { document.getElementById("rubric-used").hidden = true; });
+document.addEventListener("change", e => {
+  if (!e.target.dataset.pick) return;
+  matchChoice[e.target.dataset.pick] = e.target.value;
+  renderMatch();
+  document.getElementById(`pick-${e.target.dataset.pick}`)?.focus();
+});
+document.getElementById("to-review").addEventListener("click", () => { showView("review-view"); render(); });
+document.getElementById("new-batch").addEventListener("click", () => showView("start-view"));
+
+render();
+showView("start-view");
+</script>
+</body>
+</html>
