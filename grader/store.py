@@ -265,6 +265,16 @@ class GradeStore:
         )
         self.db.commit()
 
+    def set_comment(self, submission_id: int, criterion_id: str, text: str) -> None:
+        """Save the professor's comment on one criterion (score must exist)."""
+        cur = self.db.execute(
+            "UPDATE scores SET comment = ?, updated_at = ? WHERE submission_id = ? AND criterion_id = ?",
+            (text, _now(), submission_id, criterion_id),
+        )
+        if cur.rowcount == 0:
+            raise StoreError("Give this criterion a score before adding a comment.")
+        self.db.commit()
+
     def set_feedback(self, submission_id: int, text: str) -> None:
         self.db.execute("UPDATE submissions SET final_feedback = ?, updated_at = ? WHERE id = ?", (text, _now(), submission_id))
         self.db.commit()

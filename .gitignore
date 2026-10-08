@@ -2,3 +2,9 @@ __pycache__/
 *.py[cod]
 *.db
 .DS_Store
+.venv/
+_grading/
+sample_data/
+build/
+dist/
+*.spec

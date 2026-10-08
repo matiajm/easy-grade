@@ -1,0 +1,27 @@
+---
+description: Easy Grade project conventions
+alwaysApply: true
+---
+
+# Easy Grade
+
+Desktop app that grades student projects (Colab notebook + video walkthrough) against a rubric.
+The professor opens a folder of submissions; everything runs locally.
+
+## Architecture
+- `grader/` is the engine (rubric, SQLite store, import, scoring contract, export). It must not import pywebview.
+- `desktop/api.py` is the only bridge to the screen. Each public method of `Api` is callable from JS as
+  `window.pywebview.api.<name>(...)` and returns `{"ok": True, ...}` or `{"ok": False, "error": "..."}`.
+  Wrap new methods with `@_safe`. Methods/attributes starting with `_` are not exposed to JS.
+- Open a new `GradeStore` per call (`with self._store() as st:`); SQLite connections can't cross threads.
+- The app only writes inside `<folder>/_grading/`.
+- `ui/index.html` is plain HTML/CSS/JS, no build step, no CDN (must work offline). Escape all
+  student-provided text with `esc()`. Never insert notebook HTML outputs.
+- When you add an `Api` method, add the same method to `ui/dev_mock.js` and a test in `tests/`.
+- AI scores must go through `parse_grader_output` (scores limited to rubric levels). AI only drafts;
+  the professor approves.
+
+## Rules
+- Never commit real student files, `_grading/`, `*.db`, or exports. The repo is public.
+- Run `python -m unittest discover tests` after changes; all tests must pass.
+- Error messages are shown to the professor verbatim: say what went wrong and how to fix it.

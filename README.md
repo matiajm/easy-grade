@@ -4,12 +4,21 @@ Rubric-based grading for project assignments that include a Colab notebook (`.ip
 This step builds the parts every later step depends on: **the rubric, the grade store, and the export.**
 AI notebook grading (step 2) and video grading (step 3) plug into the contract in `grader/scoring.py`.
 
-## Quick start
+## Desktop app
 
 ```bash
 pip install -r requirements.txt
+python -m grader sample-folder sample_data              # fake submissions to try it on
+python app.py --folder sample_data/submissions          # open the app
+```
+
+Full step-by-step (setup in Cursor, test checklist, building the .app/.exe): **[docs/DESKTOP_APP.md](docs/DESKTOP_APP.md)**.
+
+## Command line
+
+```bash
 python -m grader demo demo_output       # runs the whole loop on fake data
-python -m unittest discover tests       # 7 tests
+python -m unittest discover tests       # 12 tests
 ```
 
 Open `demo_output/grades.xlsx` to see the final export.
@@ -60,10 +69,15 @@ grader/ingest.py    finds notebooks/videos per student, flags problems
 grader/scoring.py   AI output JSON schema + validator, manual scores, simulated grader
 grader/export.py    Excel workbook, gradebook CSV, feedback files
 grader/cli.py       command line + demo
+app.py              desktop app entry point
+desktop/            the Python side of the app window (api, video server, notebook reader)
+ui/                 the app screen (index.html) + dev_mock.js for browser-only UI work
+samples/            sample notebook and video for testing
+build_app.py        packages the app with PyInstaller
 ```
 
 ## Next steps
 
 2. Notebook grader: parse/run the `.ipynb`, send cells + outputs + rubric to the model with `output_schema()`.
 3. Video grader: local Whisper transcript + sampled frames, same schema for `video`/`both` criteria.
-4. Desktop review screen on top of `GradeStore`.
+4. ~~Desktop review screen~~ done: see docs/DESKTOP_APP.md.
