@@ -1,0 +1,46 @@
+{
+  "_comment": "DRAFT parser config. Rules follow the CAP3321C assignment sheet (header lines and file-name convention). Jorge owns the final file; extra keys are ignored by the parser.",
+  "max_output_chars": 2000,
+  "max_source_chars": 20000,
+  "max_images": 50,
+  "max_image_bytes": 5000000,
+  "max_notebook_bytes": 50000000,
+  "filename_pattern": "^[A-Z][A-Za-z'-]+(_[A-Z][A-Za-z'-]+){1,2}_FinalProject\\.ipynb$",
+  "name_rules": {
+    "header_cell_index": 0,
+    "max_names": 6,
+    "separator_regex": "\\s*(?:,|;|&|\\band\\b)\\s*",
+    "patterns": [
+      {
+        "label": "Name:",
+        "regex": "(?i)^\\W*names?\\s*[:\\-]\\s*(?P<names>.+)$"
+      },
+      {
+        "label": "Students:",
+        "regex": "(?i)^\\W*students?\\s*[:\\-]\\s*(?P<names>.+)$"
+      },
+      {
+        "label": "Team members:",
+        "regex": "(?i)^\\W*(?:team\\s+)?members?\\s*[:\\-]\\s*(?P<names>.+)$"
+      },
+      {
+        "label": "By ...",
+        "regex": "(?i)^\\W*by\\s+(?P<names>.+)$"
+      }
+    ]
+  },
+  "header_rules": {
+    "required_fields": [
+      "names",
+      "section",
+      "date",
+      "responsibilities"
+    ],
+    "field_patterns": {
+      "section": "(?i)^\\W*section\\s*[:\\-]\\s*(.+)$",
+      "date": "(?i)^\\W*date\\s*[:\\-]\\s*(.+)$",
+      "responsibilities": "(?i)^\\W*responsibilit(?:y|ies)\\s*[:\\-]\\s*(.+)$",
+      "course": "(?i)^\\W*(?:course|class)\\s*[:\\-]\\s*(.+)$"
+    }
+  }
+}
