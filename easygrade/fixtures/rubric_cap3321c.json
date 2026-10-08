@@ -1,0 +1,152 @@
+{
+  "schema_version": "1",
+  "rubric_version": "cap3321c-draft-1",
+  "note": "DRAFT. Level ranges transcribed from the 200-point CAP3321C Final Project rubric table in the PRD, in the shape the grader reads (see fixtures/rubric_example.json). Replaced by config/rubric.json (task 0.3).",
+  "total_points": 200,
+  "sections": [
+    {
+      "section_id": "data_cleaning",
+      "name": "Data Cleaning & Preparation",
+      "max_points": 40,
+      "checkable": "full",
+      "judged_from": "notebook",
+      "levels": [
+        {
+          "level": "excellent",
+          "min_points": 36,
+          "max_points": 40
+        },
+        {
+          "level": "good",
+          "min_points": 28,
+          "max_points": 35
+        },
+        {
+          "level": "needs_work",
+          "min_points": 0,
+          "max_points": 27
+        }
+      ]
+    },
+    {
+      "section_id": "analysis_viz",
+      "name": "Analysis & Visualizations",
+      "max_points": 50,
+      "checkable": "full",
+      "judged_from": "notebook",
+      "levels": [
+        {
+          "level": "excellent",
+          "min_points": 45,
+          "max_points": 50
+        },
+        {
+          "level": "good",
+          "min_points": 35,
+          "max_points": 44
+        },
+        {
+          "level": "needs_work",
+          "min_points": 0,
+          "max_points": 34
+        }
+      ]
+    },
+    {
+      "section_id": "interpretation",
+      "name": "Interpretation & Written Summaries",
+      "max_points": 30,
+      "checkable": "full",
+      "judged_from": "notebook",
+      "levels": [
+        {
+          "level": "excellent",
+          "min_points": 27,
+          "max_points": 30
+        },
+        {
+          "level": "good",
+          "min_points": 21,
+          "max_points": 26
+        },
+        {
+          "level": "needs_work",
+          "min_points": 0,
+          "max_points": 20
+        }
+      ]
+    },
+    {
+      "section_id": "code_quality",
+      "name": "Code Quality & Organization",
+      "max_points": 25,
+      "checkable": "full",
+      "judged_from": "notebook",
+      "levels": [
+        {
+          "level": "excellent",
+          "min_points": 23,
+          "max_points": 25
+        },
+        {
+          "level": "good",
+          "min_points": 17,
+          "max_points": 22
+        },
+        {
+          "level": "needs_work",
+          "min_points": 0,
+          "max_points": 16
+        }
+      ]
+    },
+    {
+      "section_id": "presentation",
+      "name": "Presentation of Findings",
+      "max_points": 35,
+      "checkable": "full",
+      "judged_from": "transcript",
+      "levels": [
+        {
+          "level": "excellent",
+          "min_points": 32,
+          "max_points": 35
+        },
+        {
+          "level": "good",
+          "min_points": 24,
+          "max_points": 31
+        },
+        {
+          "level": "needs_work",
+          "min_points": 0,
+          "max_points": 23
+        }
+      ]
+    },
+    {
+      "section_id": "collaboration",
+      "name": "Collaboration & Formatting",
+      "max_points": 20,
+      "checkable": "full",
+      "judged_from": "notebook",
+      "levels": [
+        {
+          "level": "excellent",
+          "min_points": 18,
+          "max_points": 20
+        },
+        {
+          "level": "good",
+          "min_points": 14,
+          "max_points": 17
+        },
+        {
+          "level": "needs_work",
+          "min_points": 0,
+          "max_points": 13
+        }
+      ]
+    }
+  ]
+}
