@@ -1,0 +1,59 @@
+{
+  "schema_version": "1",
+  "team_id": "team-001",
+  "produced_by": "notebook-parser 0.1.0",
+  "names": [
+    {"name": "Ana Example", "cell_index": 0},
+    {"name": "Ben Sample", "cell_index": 0}
+  ],
+  "header": {
+    "found": true,
+    "fields": {"course": "STA 2023", "date": "2026-03-01"},
+    "rules_ok": true
+  },
+  "filename_ok": true,
+  "cells": [
+    {
+      "index": 0,
+      "cell_type": "markdown",
+      "source": "Names: Ana Example and Ben Sample\nCourse: STA 2023\nDate: 2026-03-01",
+      "execution_count": null,
+      "outputs": [],
+      "has_error": false,
+      "syntax_ok": null
+    },
+    {
+      "index": 1,
+      "cell_type": "code",
+      "source": "import pandas as pd\ndf = pd.DataFrame({'x': [1, 2, 3]})\ndf.describe()",
+      "execution_count": 1,
+      "outputs": [
+        {"kind": "table", "text": "count 3.0 ...", "image_ref": null}
+      ],
+      "has_error": false,
+      "syntax_ok": true
+    },
+    {
+      "index": 2,
+      "cell_type": "code",
+      "source": "df.plot()",
+      "execution_count": 2,
+      "outputs": [
+        {"kind": "image", "text": null, "image_ref": "images/cell-2-0.png"}
+      ],
+      "has_error": false,
+      "syntax_ok": true
+    }
+  ],
+  "images": [
+    {"cell_index": 2, "path": "images/cell-2-0.png", "mime": "image/png"}
+  ],
+  "checks": {
+    "empty": false,
+    "execution_order": {"strictly_increasing": true, "skipped": false, "out_of_order_cells": []},
+    "error_cells": [],
+    "unexecuted_code_cells": []
+  },
+  "flags": [],
+  "future_field": "ignored by readers"
+}

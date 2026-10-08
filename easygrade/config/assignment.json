@@ -1,0 +1,23 @@
+{
+  "_comment": "DRAFT parser config. Jorge owns the final file; extra keys are ignored by the parser.",
+  "max_output_chars": 2000,
+  "filename_pattern": "^[A-Za-z0-9][A-Za-z0-9_\\- ]*\\.ipynb$",
+  "name_rules": {
+    "header_cell_index": 0,
+    "max_names": 6,
+    "separator_regex": "\\s*(?:,|;|&|\\band\\b)\\s*",
+    "patterns": [
+      {"label": "Name:", "regex": "(?i)^\\W*names?\\s*[:\\-]\\s*(?P<names>.+)$"},
+      {"label": "Students:", "regex": "(?i)^\\W*students?\\s*[:\\-]\\s*(?P<names>.+)$"},
+      {"label": "Team members:", "regex": "(?i)^\\W*(?:team\\s+)?members?\\s*[:\\-]\\s*(?P<names>.+)$"},
+      {"label": "By ...", "regex": "(?i)^\\W*by\\s+(?P<names>.+)$"}
+    ]
+  },
+  "header_rules": {
+    "required_fields": ["names"],
+    "field_patterns": {
+      "course": "(?i)^\\W*(?:course|class)\\s*[:\\-]\\s*(.+)$",
+      "date": "(?i)^\\W*date\\s*[:\\-]\\s*(.+)$"
+    }
+  }
+}

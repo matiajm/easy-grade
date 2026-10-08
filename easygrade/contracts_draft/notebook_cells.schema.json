@@ -1,0 +1,324 @@
+{
+  "$defs": {
+    "Cell": {
+      "properties": {
+        "index": {
+          "title": "Index",
+          "type": "integer"
+        },
+        "cell_type": {
+          "enum": [
+            "code",
+            "markdown",
+            "raw"
+          ],
+          "title": "Cell Type",
+          "type": "string"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "execution_count": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Execution Count"
+        },
+        "outputs": {
+          "items": {
+            "$ref": "#/$defs/Output"
+          },
+          "title": "Outputs",
+          "type": "array"
+        },
+        "has_error": {
+          "default": false,
+          "title": "Has Error",
+          "type": "boolean"
+        },
+        "syntax_ok": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Syntax Ok"
+        }
+      },
+      "required": [
+        "index",
+        "cell_type",
+        "source"
+      ],
+      "title": "Cell",
+      "type": "object"
+    },
+    "Checks": {
+      "properties": {
+        "empty": {
+          "title": "Empty",
+          "type": "boolean"
+        },
+        "execution_order": {
+          "$ref": "#/$defs/ExecutionOrder"
+        },
+        "error_cells": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Error Cells",
+          "type": "array"
+        },
+        "unexecuted_code_cells": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Unexecuted Code Cells",
+          "type": "array"
+        }
+      },
+      "required": [
+        "empty",
+        "execution_order"
+      ],
+      "title": "Checks",
+      "type": "object"
+    },
+    "ExecutionOrder": {
+      "properties": {
+        "strictly_increasing": {
+          "title": "Strictly Increasing",
+          "type": "boolean"
+        },
+        "skipped": {
+          "title": "Skipped",
+          "type": "boolean"
+        },
+        "out_of_order_cells": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Out Of Order Cells",
+          "type": "array"
+        }
+      },
+      "required": [
+        "strictly_increasing",
+        "skipped"
+      ],
+      "title": "ExecutionOrder",
+      "type": "object"
+    },
+    "Flag": {
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "info",
+            "warn",
+            "block"
+          ],
+          "title": "Severity",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "severity"
+      ],
+      "title": "Flag",
+      "type": "object"
+    },
+    "Header": {
+      "properties": {
+        "found": {
+          "title": "Found",
+          "type": "boolean"
+        },
+        "fields": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Fields",
+          "type": "object"
+        },
+        "rules_ok": {
+          "title": "Rules Ok",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "found",
+        "rules_ok"
+      ],
+      "title": "Header",
+      "type": "object"
+    },
+    "ImageRef": {
+      "properties": {
+        "cell_index": {
+          "title": "Cell Index",
+          "type": "integer"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "mime": {
+          "title": "Mime",
+          "type": "string"
+        }
+      },
+      "required": [
+        "cell_index",
+        "path",
+        "mime"
+      ],
+      "title": "ImageRef",
+      "type": "object"
+    },
+    "NameEntry": {
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "cell_index": {
+          "title": "Cell Index",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "name",
+        "cell_index"
+      ],
+      "title": "NameEntry",
+      "type": "object"
+    },
+    "Output": {
+      "properties": {
+        "kind": {
+          "enum": [
+            "text",
+            "table",
+            "error",
+            "image"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Text"
+        },
+        "image_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Image Ref"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "Output",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "schema_version": {
+      "const": "1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "team_id": {
+      "title": "Team Id",
+      "type": "string"
+    },
+    "produced_by": {
+      "title": "Produced By",
+      "type": "string"
+    },
+    "names": {
+      "items": {
+        "$ref": "#/$defs/NameEntry"
+      },
+      "title": "Names",
+      "type": "array"
+    },
+    "header": {
+      "$ref": "#/$defs/Header"
+    },
+    "filename_ok": {
+      "title": "Filename Ok",
+      "type": "boolean"
+    },
+    "cells": {
+      "items": {
+        "$ref": "#/$defs/Cell"
+      },
+      "title": "Cells",
+      "type": "array"
+    },
+    "images": {
+      "items": {
+        "$ref": "#/$defs/ImageRef"
+      },
+      "title": "Images",
+      "type": "array"
+    },
+    "checks": {
+      "$ref": "#/$defs/Checks"
+    },
+    "flags": {
+      "items": {
+        "$ref": "#/$defs/Flag"
+      },
+      "title": "Flags",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "team_id",
+    "produced_by",
+    "header",
+    "filename_ok",
+    "checks"
+  ],
+  "title": "NotebookCells",
+  "type": "object"
+}
