@@ -23,11 +23,13 @@ import traceback
 from pathlib import Path
 
 from grader import export as ex
+from grader.ai_grader import AIConfig, AIError, check_connection, grade_notebook
 from grader.ingest import load_roster, scan_submissions
 from grader.rubric import Rubric, RubricError, load_rubric, write_rubric_template
 from grader.scoring import GraderOutputError, SimulatedGrader, parse_grader_output
 from grader.store import GradeStore, StoreError
 
+from . import settings as cfgstore
 from .media import MediaServer
 from .notebook import read_notebook
 
@@ -42,7 +44,7 @@ def _safe(fn):
     def wrapper(*args, **kwargs):
         try:
             return fn(*args, **kwargs)
-        except (RubricError, StoreError, GraderOutputError, ValueError, FileNotFoundError, KeyError) as e:
+        except (RubricError, StoreError, GraderOutputError, AIError, ValueError, FileNotFoundError, KeyError) as e:
             return {"ok": False, "error": str(e).strip("'\"")}
         except PermissionError as e:
             return {"ok": False, "error": f"Can't write {Path(e.filename or '').name or 'the file'}. "
@@ -198,7 +200,7 @@ class Api:
             "grading_dir": str(self._gdir),
             "roster": str(self._roster_path()) if self._roster_path() else None,
             "rubric": self._rubric.to_dict() if self._rubric else None,
-            "ai_ready": False,  # becomes True when the real graders (steps 2–3) are connected
+            "ai_ready": bool(cfgstore.load_settings()["api_key"]),
             "students": [],
             "counts": {"approved": 0, "graded": 0, "pending": 0, "error": 0, "flagged": 0},
         }
@@ -325,6 +327,56 @@ class Api:
             for f in flags:
                 st.add_flag(s.id, f)
         return {"ok": True}
+
+    # ---------- AI ----------
+    def _ai_config(self) -> AIConfig:
+        st = cfgstore.load_settings()
+        if not st["api_key"]:
+            raise AIError("Add your API key in Settings first.")
+        return AIConfig(api_key=st["api_key"], model=st["model"], anonymize=st["anonymize"],
+                        send_images=st["send_images"])
+
+    @_safe
+    def get_settings(self):
+        st = cfgstore.load_settings()
+        return {"ok": True, "has_key": bool(st["api_key"]), "key_hint": cfgstore.mask(st["api_key"]),
+                "key_source": st["key_source"], "model": st["model"], "anonymize": st["anonymize"],
+                "send_images": st["send_images"], "settings_file": str(cfgstore.config_dir() / "settings.json")}
+
+    @_safe
+    def save_settings(self, values: dict):
+        values = dict(values or {})
+        if "api_key" in values and values["api_key"] is not None:
+            key = values["api_key"].strip()
+            if key and not key.startswith("sk-"):
+                raise ValueError("That doesn't look like an API key. It should start with \"sk-\".")
+        cfgstore.save_settings(values)
+        return self.get_settings()
+
+    @_safe
+    def test_connection(self):
+        cfg = self._ai_config()
+        model = check_connection(cfg)
+        return {"ok": True, "message": f"Connected. Model: {model}"}
+
+    @_safe
+    def grade_student(self, student_id: str):
+        """Grade the notebook criteria with AI. Video criteria stay for the video grader / by hand."""
+        rubric = self._need_rubric()
+        cfg = self._ai_config()
+        with self._store() as st:
+            _, s = self._sub(st, student_id)
+        if not s.notebook_path:
+            return {"ok": True, "skipped": True, "reason": "No notebook"}
+        result = grade_notebook(rubric, s.notebook_path, cfg, student=(s.student_name, s.student_id, s.email))
+        with self._store() as st:
+            st.record_ai_results(s.id, rubric, result.results, result.feedback)
+            for f in result.flags:
+                st.add_flag(s.id, "AI: " + f)
+        log_dir = self._gdir / "ai_log"
+        log_dir.mkdir(exist_ok=True)
+        (log_dir / f"{s.student_id}.json").write_text(json.dumps(result.log, indent=2), encoding="utf-8")
+        return {"ok": True, "usage": result.usage}
 
     # ---------- export ----------
     @_safe

@@ -56,7 +56,7 @@ Commands go in Cursor's terminal (**Terminal → New Terminal**). Lines starting
 python -m unittest discover tests
 ```
 
-Expected ending: `Ran 12 tests ... OK`. These cover the rubric, the database, the export, the
+Expected ending: `Ran 21 tests ... OK`. These cover the rubric, the database, the export, the
 desktop API (open folder → rubric → grade → review → export → resume), video streaming, and notebook reading.
 Run them after every change.
 
@@ -183,9 +183,7 @@ build_app.py         packages the app with PyInstaller
 Every `Api` method returns `{"ok": true, ...}` or `{"ok": false, "error": "message"}`, and the screen shows
 the error message as-is, so write errors for the professor to read.
 
-## Next: connect real AI grading
+## AI grading
 
-`Api.grade_simulated` is the placeholder. The real graders return the same JSON
-(`grader.scoring.output_schema(rubric)`), get checked by `parse_grader_output`, and are saved by
-`record_ai_results`. So the screen doesn't change: add `grade_student` next to `grade_simulated`, then switch
-the Grading button to it and set `ai_ready` to `True`.
+Notebook criteria can be graded by AI: see **[AI_GRADING.md](AI_GRADING.md)**.
+The simulated grader is still available under **Testing tools** in the Grading step.

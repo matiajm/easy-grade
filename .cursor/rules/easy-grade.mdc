@@ -20,6 +20,10 @@ The professor opens a folder of submissions; everything runs locally.
 - When you add an `Api` method, add the same method to `ui/dev_mock.js` and a test in `tests/`.
 - AI scores must go through `parse_grader_output` (scores limited to rubric levels). AI only drafts;
   the professor approves.
+- AI calls live in `grader/ai_grader.py` (plain urllib, Anthropic Messages API, forced `submit_grades` tool).
+  Tests must use a fake `post` function: never call the real API or need a key in tests.
+- The API key lives only in `desktop/settings.py`'s per-user settings file or ANTHROPIC_API_KEY. Never log it,
+  never write it in the repo or `_grading/`.
 
 ## Rules
 - Never commit real student files, `_grading/`, `*.db`, or exports. The repo is public.
