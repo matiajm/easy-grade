@@ -1,0 +1,11 @@
+# Real student data never goes in git (FERPA). Anchored to this folder,
+# so samples/submissions/ (synthetic) is still committed.
+/submissions/*
+!/submissions/.gitkeep
+/work/
+/results/
+/results_run2/
+/output/
+/.venv/
+__pycache__/
+.DS_Store

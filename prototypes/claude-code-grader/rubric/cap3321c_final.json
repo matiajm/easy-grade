@@ -1,0 +1,80 @@
+{
+  "course": "CAP3321C Data Wrangling with Python",
+  "assignment": "Final Project",
+  "total_points": 200,
+  "levels_order": ["needs_work", "good", "excellent"],
+  "categories": [
+    {
+      "key": "data_cleaning",
+      "name": "Data Cleaning & Preparation",
+      "points": 40,
+      "judged_from": "Notebook code, outputs and Markdown explanations",
+      "limits": "Judged from saved outputs. Student code is never run.",
+      "levels": {
+        "excellent": {"min": 36, "max": 40, "description": "All relevant cleaning steps are performed and clearly justified. Missing values, data types, and inconsistencies are handled appropriately. Cleaning rationale is thoroughly explained in Markdown cells. Code runs without errors."},
+        "good": {"min": 28, "max": 35, "description": "Most cleaning steps are performed correctly. Minor issues remain (e.g., one data type unconverted, incomplete explanation of a cleaning decision). Code runs with minimal warnings."},
+        "needs_work": {"min": 0, "max": 27, "description": "Significant data quality issues are left unaddressed. Little or no explanation of cleaning decisions. Code contains errors that affect downstream analysis."}
+      }
+    },
+    {
+      "key": "analysis_viz",
+      "name": "Analysis & Visualizations",
+      "points": 50,
+      "judged_from": "Notebook code, tables and the chart images saved in the notebook, checked against the assigned questions",
+      "limits": "Chart quality (titles, axes, legends) is judged from the saved images.",
+      "levels": {
+        "excellent": {"min": 45, "max": 50, "description": "All questions from the assigned section are answered with appropriate tables or plots. Visualizations are well-chosen for the data, clearly labeled (titles, axes, legends), and easy to interpret. Analysis demonstrates strong command of course skills."},
+        "good": {"min": 35, "max": 44, "description": "Most questions are answered correctly. Visualizations are generally appropriate but may have minor labeling issues or a less-than-optimal chart type choice. Analysis is mostly sound."},
+        "needs_work": {"min": 0, "max": 34, "description": "Several questions are unanswered or answered incorrectly. Visualizations are missing, mislabeled, or inappropriate for the data. Analysis shows limited application of course skills."}
+      }
+    },
+    {
+      "key": "interpretation",
+      "name": "Interpretation & Written Summaries",
+      "points": 30,
+      "judged_from": "Markdown cells next to each result",
+      "limits": "None beyond the notebook text.",
+      "levels": {
+        "excellent": {"min": 27, "max": 30, "description": "Every question includes a clear, thoughtful written summary that demonstrates understanding of what the results mean. Observations go beyond restating numbers and provide insight and context."},
+        "good": {"min": 21, "max": 26, "description": "Most questions include written summaries. Interpretations are generally correct but may be surface-level or simply restate the output without deeper insight."},
+        "needs_work": {"min": 0, "max": 20, "description": "Written summaries are missing for most questions or are too vague to demonstrate understanding. Little evidence that the student interpreted the results."}
+      }
+    },
+    {
+      "key": "code_quality",
+      "name": "Code Quality & Organization",
+      "points": 25,
+      "judged_from": "Notebook structure, headings, comments, variable names, error outputs and cell execution order",
+      "limits": "'Runs top to bottom' is judged from saved outputs and execution order, because student code is never run.",
+      "levels": {
+        "excellent": {"min": 23, "max": 25, "description": "Notebook is well-organized with clear Markdown headings and logical flow. Code is clean, commented where needed, uses meaningful variable names, and runs top-to-bottom without errors. No leftover or unnecessary code."},
+        "good": {"min": 17, "max": 22, "description": "Notebook is mostly organized. Code runs but may have minor issues: inconsistent formatting, sparse comments, or a few unused cells. Overall structure is followable."},
+        "needs_work": {"min": 0, "max": 16, "description": "Notebook is disorganized or difficult to follow. Code does not run cleanly, has significant errors, or lacks structure. Headings and Markdown cells are missing or misused."}
+      }
+    },
+    {
+      "key": "presentation",
+      "name": "Presentation of Findings",
+      "points": 35,
+      "judged_from": "The transcript, plus the recording length for the time limit",
+      "limits": "The transcript has no speaker labels. Whether both partners presented is inferred from what is said (for example names and hand-offs) and must be confirmed by the professor.",
+      "levels": {
+        "excellent": {"min": 32, "max": 35, "description": "Presentation is clear, well-organized, and stays within the time limit. Both partners participate in the delivery. Key findings are communicated effectively with references to visualizations. Presenters demonstrate strong understanding of their analysis."},
+        "good": {"min": 24, "max": 31, "description": "Presentation covers the main findings and both partners participate, though delivery may be uneven. Some findings could be explained more clearly. Stays roughly within the time limit."},
+        "needs_work": {"min": 0, "max": 23, "description": "Presentation is disorganized, significantly over or under time, or only one partner presents. Key findings are unclear or not supported by the analysis. Limited evidence of understanding."}
+      }
+    },
+    {
+      "key": "collaboration",
+      "name": "Collaboration & Formatting",
+      "points": 20,
+      "judged_from": "Notebook header and file name (checked by code), plus responsibilities stated in the header",
+      "limits": "Whether both partners contributed meaningfully cannot be proven from the files. Flag it for the professor.",
+      "levels": {
+        "excellent": {"min": 18, "max": 20, "description": "All submission guidelines are followed: header is complete, file is named correctly, partner and section responsibilities are clearly identified. Both partners contributed meaningfully."},
+        "good": {"min": 14, "max": 17, "description": "Most guidelines are followed. Minor issues such as an incomplete header field or slightly incorrect filename. Both partners appear to have contributed."},
+        "needs_work": {"min": 0, "max": 13, "description": "Multiple submission guidelines are not followed. Header is incomplete or missing. Filename does not follow the convention. Unclear whether both partners contributed."}
+      }
+    }
+  ]
+}

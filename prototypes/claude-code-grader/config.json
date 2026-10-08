@@ -1,0 +1,11 @@
+{
+  "rubric": "rubric/cap3321c_final.json",
+  "assignment_questions": "assignment/questions.md",
+  "filename_pattern": "^[A-Z][A-Za-z'-]+(_[A-Z][A-Za-z'-]+){1,2}_FinalProject\\.ipynb$",
+  "header_fields": ["Students", "Section", "Date", "Responsibilities"],
+  "max_presentation_minutes": 5,
+  "whisper_model": "base.en",
+  "low_confidence_logprob": -1.0,
+  "redact_names": true,
+  "media_extensions": [".mp4", ".mov", ".m4v", ".webm", ".mkv", ".m4a", ".mp3", ".wav", ".aiff", ".aif"]
+}
