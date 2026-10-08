@@ -60,7 +60,7 @@ class ModelTests(unittest.TestCase):
 class ConfigTests(unittest.TestCase):
     def test_default_config_loads(self):
         cfg = load_config()
-        self.assertEqual(cfg.header_rules.required_fields, ["names"])
+        self.assertEqual(cfg.header_rules.required_fields, ["names", "section", "date", "responsibilities"])
         self.assertGreaterEqual(len(cfg.name_rules.patterns), 4)
 
     def test_invalid_regex_rejected(self):
@@ -71,7 +71,7 @@ class ConfigTests(unittest.TestCase):
 
     def test_required_field_needs_pattern(self):
         data = load_config().model_dump()
-        data["header_rules"]["required_fields"] = ["names", "section"]
+        data["header_rules"]["required_fields"] = ["names", "no_such_field"]
         with self.assertRaises(ValidationError):
             AssignmentConfig.model_validate(data)
 

@@ -19,6 +19,14 @@ from easygrade.pipeline.notebook.parse import parse_notebook, syntax_ok, write_n
 FIXTURES = Path(__file__).resolve().parents[1] / "easygrade" / "fixtures" / "notebooks"
 
 
+def lenient_config():
+    """Default rules, relaxed so the synthetic fixtures (not CAP3321C-named) are judged on structure only."""
+    data = load_config().model_dump()
+    data["filename_pattern"] = r"^[A-Za-z0-9][A-Za-z0-9_\- ]*\.ipynb$"
+    data["header_rules"]["required_fields"] = ["names"]
+    return type(load_config()).model_validate(data)
+
+
 def codes(result):
     return [f.code for f in result.flags]
 
@@ -31,7 +39,7 @@ class FixtureTests(unittest.TestCase):
     def parse(self, name):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
-        return parse_notebook(FIXTURES / name, "team-001", self.tmp.name)
+        return parse_notebook(FIXTURES / name, "team-001", self.tmp.name, lenient_config())
 
     def test_every_fixture_gives_valid_output(self):
         for path in sorted(FIXTURES.glob("*.ipynb")):
@@ -186,19 +194,52 @@ class UnitTests(unittest.TestCase):
         self.assertIsNone(syntax_ok("   "))
 
     def test_header_rules_and_filename_flags(self):
-        data = load_config().model_dump()
-        data["header_rules"]["required_fields"] = ["names", "course", "date"]
-        cfg = type(load_config()).model_validate(data)
         with tempfile.TemporaryDirectory() as d:
-            res = parse_notebook(FIXTURES / "hand_01_basic.ipynb", "team-1", d, cfg)
+            res = parse_notebook(FIXTURES / "hand_01_basic.ipynb", "team-1", d)  # default rules
             self.assertIn("HEADER_RULES", codes(res))
             self.assertFalse(res.header.rules_ok)
             self.assertNotIn("date", res.header.fields)
-            nb = Path(d) / "bad name!!.ipynb"
-            nb.write_bytes((FIXTURES / "hand_01_basic.ipynb").read_bytes())
-            res = parse_notebook(nb, "team-1", d)
             self.assertFalse(res.filename_ok)
             self.assertIn("FILENAME_RULES", codes(res))
+
+
+class AssignmentRulesTests(unittest.TestCase):
+    """The default config follows the CAP3321C sheet: Students/Section/Date/Responsibilities header,
+    Lastname1_Lastname2_FinalProject.ipynb file name. Notebooks here are built in the test."""
+
+    HEADER_FULL = "\n".join([
+        "**Students:** Alex Rivera, Sam Chen",
+        "**Section:** A",
+        "**Date:** May 1, 2026",
+        "**Responsibilities:** Alex Rivera: cleaning. Sam Chen: charts.",
+    ])
+
+    def run_parse(self, header, filename):
+        with tempfile.TemporaryDirectory() as d:
+            nb = nbformat.v4.new_notebook()
+            nb.cells = [nbformat.v4.new_markdown_cell(header), nbformat.v4.new_code_cell("x = 1")]
+            path = Path(d) / filename
+            nbformat.write(nb, str(path))
+            return parse_notebook(path, "team-1", Path(d) / "out")
+
+    def test_compliant_submission_has_no_flags(self):
+        r = self.run_parse(self.HEADER_FULL, "Rivera_Chen_FinalProject.ipynb")
+        self.assertEqual([n.name for n in r.names], ["Alex Rivera", "Sam Chen"])
+        self.assertEqual(codes(r), [])
+        self.assertTrue(r.filename_ok)
+        self.assertEqual(sorted(r.header.fields), ["date", "names", "responsibilities", "section"])
+
+    def test_missing_responsibilities_flagged(self):
+        header = "\n".join(self.HEADER_FULL.splitlines()[:3])
+        r = self.run_parse(header, "Rivera_Chen_FinalProject.ipynb")
+        self.assertIn("HEADER_RULES", codes(r))
+        self.assertIn("responsibilities", next(f.message for f in r.flags if f.code == "HEADER_RULES"))
+
+    def test_wrong_file_names_flagged(self):
+        for name in ("patel-okafor final.ipynb", "final.ipynb", "Rivera_Chen_Project.ipynb"):
+            with self.subTest(name):
+                self.assertIn("FILENAME_RULES", codes(self.run_parse(self.HEADER_FULL, name)))
+        self.assertNotIn("FILENAME_RULES", codes(self.run_parse(self.HEADER_FULL, "O'Neil_Garcia-Lopez_FinalProject.ipynb")))
 
 
 if __name__ == "__main__":
