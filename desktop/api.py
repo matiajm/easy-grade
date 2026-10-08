@@ -211,6 +211,8 @@ class Api:
                     "flags": s.flags, "has_notebook": s.notebook is not None, "has_video": s.video is not None,
                     "late": s.late, "total": None, "scores": {},
                 })
+                if s.flags:
+                    state["counts"]["flagged"] += 1
             return state
         with self._store() as st:
             aid, rubric = st.get_assignment(self._rubric.assignment)

@@ -31,6 +31,7 @@ class DesktopApiTests(unittest.TestCase):
         self.assertTrue(st["ok"], st)
         self.assertIsNone(st["rubric"])
         self.assertEqual(len(st["students"]), 10)
+        self.assertEqual(st["counts"]["flagged"], 5)
         self.assertTrue((self.folder / "_grading").is_dir())
 
         # Rubric
