@@ -180,7 +180,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* Footer */
 .foot { display: flex; flex-wrap: wrap; gap: 12px 20px; justify-content: space-between; align-items: center; }
 .foot .muted { color: var(--muted); font-size: 14px; }
+.btn { border: 1px solid var(--line); background: var(--card); color: var(--fg); border-radius: 10px; padding: 10px 16px; font-weight: 500; }
+.btn:hover { border-color: var(--accent); color: var(--accent); }
 .btn.primary { border: 0; border-radius: 10px; padding: 11px 20px; background: var(--accent); color: var(--accent-fg); font-weight: 600; }
+.btn.primary:hover { color: var(--accent-fg); filter: brightness(1.08); }
 .btn.primary:disabled { opacity: .4; cursor: not-allowed; }
 .toast { color: var(--ok); font-size: 14px; }
 .sketch { font-size: 12px; color: var(--muted); text-align: center; }
