@@ -32,10 +32,18 @@ class CriterionResult:
 
 
 # ---------- AI output contract ----------
-def output_schema(rubric: Rubric) -> dict:
-    """JSON Schema the AI model's reply must match (use with structured outputs)."""
+def _selected(rubric: Rubric, only: list[str] | None):
+    return [c for c in rubric.criteria if only is None or c.id in only]
+
+
+def output_schema(rubric: Rubric, only: list[str] | None = None) -> dict:
+    """JSON Schema the AI model's reply must match.
+
+    `only` limits it to some criteria (e.g. the notebook grader only scores
+    notebook criteria; video criteria come from the video grader).
+    """
     crit_props = {}
-    for c in rubric.criteria:
+    for c in _selected(rubric, only):
         crit_props[c.id] = {
             "type": "object",
             "description": f"{c.name} ({c.points:g} pts, graded from {c.source})",
@@ -58,7 +66,7 @@ def output_schema(rubric: Rubric) -> dict:
             "criteria": {
                 "type": "object",
                 "properties": crit_props,
-                "required": rubric.criterion_ids,
+                "required": [c.id for c in _selected(rubric, only)],
                 "additionalProperties": False,
             },
             "feedback": {"type": "string", "description": "Short, encouraging feedback addressed to the student."},
@@ -69,12 +77,17 @@ def output_schema(rubric: Rubric) -> dict:
     }
 
 
-def parse_grader_output(rubric: Rubric, data: dict) -> tuple[list[CriterionResult], str, list[str]]:
+def parse_grader_output(
+    rubric: Rubric, data: dict, only: list[str] | None = None
+) -> tuple[list[CriterionResult], str, list[str]]:
     """Validate a grader reply against the rubric. Returns (results, feedback, flags)."""
     problems = []
     crit_data = data.get("criteria") or {}
+    if not isinstance(crit_data, dict):
+        raise GraderOutputError("Grader output rejected: 'criteria' must be an object")
+    selected = _selected(rubric, only)
     results: list[CriterionResult] = []
-    for c in rubric.criteria:
+    for c in selected:
         d = crit_data.get(c.id)
         if d is None:
             problems.append(f"missing criterion '{c.id}'")
@@ -89,21 +102,26 @@ def parse_grader_output(rubric: Rubric, data: dict) -> tuple[list[CriterionResul
             problems.append(f"'{c.id}': score {score:g} is not a rubric level ({allowed})")
             continue
         conf = d.get("confidence")
+        try:
+            conf = min(1.0, max(0.0, float(conf))) if conf is not None else None
+        except (TypeError, ValueError):
+            conf = None
         results.append(
             CriterionResult(
                 criterion_id=c.id,
                 score=score,
                 reason=str(d.get("reason", "")).strip(),
                 evidence=[str(e) for e in d.get("evidence", [])],
-                confidence=float(conf) if conf is not None else None,
+                confidence=conf,
             )
         )
-    extra = set(crit_data) - set(rubric.criterion_ids)
+    extra = set(crit_data) - {c.id for c in selected}
     if extra:
         problems.append(f"unknown criteria: {', '.join(sorted(extra))}")
     if problems:
         raise GraderOutputError("Grader output rejected: " + "; ".join(problems))
-    return results, str(data.get("feedback", "")).strip(), [str(f) for f in data.get("flags", [])]
+    flags = data.get("flags", [])
+    return results, str(data.get("feedback", "")).strip(), [str(f) for f in flags] if isinstance(flags, list) else []
 
 
 # ---------- manual scores ----------

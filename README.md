@@ -18,12 +18,13 @@ python app.py --folder sample_data/submissions          # open the app
 ```
 
 Full step-by-step (setup in Cursor, test checklist, building the .app/.exe): **[docs/DESKTOP_APP.md](docs/DESKTOP_APP.md)**.
+AI grading of notebook criteria (API key, privacy, cost): **[docs/AI_GRADING.md](docs/AI_GRADING.md)**.
 
 ## Command line
 
 ```bash
 python -m grader demo demo_output       # runs the whole loop on fake data
-python -m unittest discover tests       # 12 tests
+python -m unittest discover tests       # 21 tests
 ```
 
 If PowerShell blocks the activate script, run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once.
@@ -74,6 +75,8 @@ grader/rubric.py    rubric model, validation, Excel/CSV import, template
 grader/store.py     SQLite store: assignments, submissions, scores (AI vs final)
 grader/ingest.py    finds notebooks/videos per student, flags problems
 grader/scoring.py   AI output JSON schema + validator, manual scores, simulated grader
+grader/ai_grader.py AI notebook grader (Anthropic API)
+grader/notebook.py  reads .ipynb files
 grader/export.py    Excel workbook, gradebook CSV, feedback files
 grader/cli.py       command line + demo
 app.py              desktop app entry point

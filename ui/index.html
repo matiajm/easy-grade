@@ -142,6 +142,18 @@ textarea{width:100%;border:1px solid var(--line);border-radius:6px;padding:6px 8
 .totalbar b{font-size:22px;font-variant-numeric:tabular-nums}
 .flagline{background:var(--bad-soft);color:var(--bad);border-radius:6px;padding:6px 10px;font-size:13px}
 .result{font:12px/1.7 var(--f-mono);white-space:pre-wrap}
+.modal-bg{position:fixed;inset:0;background:rgb(0 0 0 / .35);display:grid;place-items:center;padding:24px;z-index:5}
+.modal{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:22px;width:min(560px,100%);max-height:calc(100vh - 48px);overflow:auto;display:grid;gap:14px;box-shadow:0 20px 50px rgb(0 0 0 / .3)}
+.field{display:grid;gap:4px}
+.field label{font-weight:600;font-size:13px}
+.field input[type=text],.field input[type=password]{border:1px solid var(--line);border-radius:6px;padding:8px 10px;font:13px var(--f-mono);background:var(--surface);color:var(--ink);width:100%}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:13px}
+.check input{margin-top:3px}
+.hint{font-size:12px;color:var(--muted)}
+.pill.ai{background:var(--accent-soft);color:var(--accent)}
+details.tools{border:1px dashed var(--line);border-radius:var(--r);padding:8px 12px}
+details.tools summary{cursor:pointer;color:var(--muted);font-size:13px}
+.fail{font-size:13px;color:var(--bad)}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:10px 14px;border-radius:var(--r);font-size:13px;max-width:calc(100vw - 32px);box-shadow:0 8px 24px rgb(0 0 0 / .25);z-index:10}
 .toast.err{background:var(--bad);color:#fff}
 
@@ -171,6 +183,8 @@ const S = {
   exportResult: null,
   includeUnapproved: false,
   replaceWarn: null,
+  settings: null,       // from api.get_settings() while the Settings window is open
+  lastRun: null,        // summary of the last AI grading run
 };
 const SRC = { notebook: "Notebook", video: "Video", both: "Both" };
 const $ = (s) => document.querySelector(s);
@@ -202,6 +216,15 @@ async function call(name, ...args) {
   }
 }
 const ok = (r) => r && !r.failed;
+// Same as call() but returns {error} instead of showing a toast (for batch runs).
+async function callQuiet(name, ...args) {
+  try {
+    const r = await window.pywebview.api[name](...args);
+    return r && r.ok !== false ? r : { failed: true, error: (r && r.error) || "Something went wrong." };
+  } catch (e) {
+    return { failed: true, error: String((e && e.message) || e) };
+  }
+}
 
 async function refresh() {
   const st = await call("get_state");
@@ -249,7 +272,7 @@ function viewShell() {
     <div class="titlebar">
       <span class="name">Easy Grade</span>
       <span class="path" title="${esc(st.folder)}">${esc(st.rubric ? st.rubric.assignment + " · " : "")}${esc(st.folder)}</span>
-      <span class="right"><span class="pill" title="Files are read and processed on this computer">Runs locally</span><button class="btn" data-act="choose-folder">Change folder…</button></span>
+      <span class="right">${st.ai_ready ? `<span class="pill ai" title="Notebook text and charts are sent to the AI service for grading. Videos stay on this computer.">AI grading on</span>` : `<span class="pill" title="Files are read and processed on this computer">Runs locally</span>`}<button class="btn" data-act="settings">Settings</button><button class="btn" data-act="choose-folder">Change folder…</button></span>
     </div>
     <div class="body">
       <nav class="rail" aria-label="Steps">${stepsInfo().map((x, i) => `<button class="step" data-step="${i}" ${S.step === i ? 'aria-current="step"' : ""} ${x.on ? "" : "disabled"}><span class="n">${i + 1}</span><span class="t">${x.t}</span><span class="s">${esc(x.s)}</span></button>`).join("")}</nav>
@@ -300,19 +323,52 @@ function viewSubmissions() {
 }
 
 function viewGrading() {
-  const st = S.state, g = S.grading;
-  const pending = st.students.filter((s) => s.status === "pending" && (s.has_notebook || s.has_video));
-  return `<div class="head"><div><h2>3 · Grading</h2><p class="lede">The AI drafts a score, a reason and evidence for every criterion. Nothing is final until you approve it in Review.</p></div></div>
-    <div class="note warn"><b>AI grading isn't connected yet.</b><p>Until it is, score by hand in Review, or run the simulated grader to try the whole workflow with made-up scores.</p></div>
-    <div class="actions">
-      <button class="btn primary" data-act="simulate" ${g || !pending.length ? "disabled" : ""}>Run simulated grader on ${pending.length} ungraded</button>
-      <button class="btn" data-act="simulate-all" ${g ? "disabled" : ""}>Re-run on everyone</button>
-    </div>
-    ${g ? `<div style="display:grid;gap:6px"><div class="progress"><i style="width:${Math.round((g.done / Math.max(g.total, 1)) * 100)}%"></i></div><span class="muted num">${g.done} of ${g.total}${g.current ? " · " + esc(g.current) : ""}</span></div>` : ""}
+  const st = S.state, g = S.grading, r = st.rubric;
+  const nbPts = r.criteria.filter((c) => c.source === "notebook").reduce((a, c) => a + c.points, 0);
+  const otherPts = r.total_points - nbPts;
+  const pending = st.students.filter((s) => s.status === "pending" && s.has_notebook);
+  const withNb = st.students.filter((s) => s.has_notebook);
+  const run = g ? `<div style="display:grid;gap:6px"><div class="progress"><i style="width:${Math.round((g.done / Math.max(g.total, 1)) * 100)}%"></i></div>
+      <span class="muted num">${g.done} of ${g.total}${g.current.length ? " · grading " + esc(g.current.join(", ")) : ""}${g.tokens ? ` · ${g.tokens.toLocaleString()} tokens so far` : ""}${g.stop ? " · stopping after the current students…" : ""}</span></div>` : "";
+  const last = S.lastRun ? `<div class="note"><b>Last run: ${S.lastRun.ok} graded${S.lastRun.skipped ? `, ${S.lastRun.skipped} skipped` : ""}${S.lastRun.failed.length ? `, ${S.lastRun.failed.length} failed` : ""}.</b>
+      ${S.lastRun.tokens ? `<span class="hint">${S.lastRun.tokens.toLocaleString()} tokens used. Your API console shows the exact cost.</span>` : ""}
+      ${S.lastRun.failed.map((f) => `<div class="fail">${esc(f.name)}: ${esc(f.error)}</div>`).join("")}</div>` : "";
+  const ai = st.ai_ready
+    ? `<div class="note"><b>AI grades the notebook criteria (${fmt(nbPts)} of ${fmt(r.total_points)} points).</b>
+        <p>${otherPts ? `The video criteria (${fmt(otherPts)} points) aren't graded by AI yet; score them yourself in Review.` : ""} Each student's request is saved in <span class="mono">_grading/ai_log/</span> so you can see exactly what was sent.</p></div>
+       <div class="actions">
+        <button class="btn primary" data-act="ai-grade" ${g || !pending.length ? "disabled" : ""}>Grade ${pending.length} ungraded notebook${pending.length === 1 ? "" : "s"} with AI</button>
+        <button class="btn" data-act="ai-grade-all" ${g || !withNb.length ? "disabled" : ""}>Re-grade all ${withNb.length}</button>
+        ${g ? `<button class="btn" data-act="stop" ${g.stop ? "disabled" : ""}>Stop</button>` : ""}
+       </div>`
+    : `<div class="note warn"><b>AI grading needs an API key.</b><p>Add it in Settings. Until then, score by hand in Review.</p><div class="actions"><button class="btn primary" data-act="settings">Open Settings</button></div></div>`;
+  return `<div class="head"><div><h2>3 · Grading</h2><p class="lede">The AI drafts a score, a reason and evidence for each criterion. Nothing is final until you approve it in Review. Scores you already changed are kept when you re-grade.</p></div></div>
+    ${ai}${run}${last}
     <div class="tbl-wrap"><table><thead><tr><th>Student</th><th>Status</th><th class="r">Total</th><th>Flags</th></tr></thead><tbody>
-    ${st.students.map((s) => `<tr><td>${esc(s.name || s.id)}</td><td><span class="chip st-${s.status}">${esc(s.status_label)}</span></td><td class="r num">${s.total == null ? "—" : fmt(s.total) + " / " + fmt(st.rubric.total_points)}</td><td class="muted">${s.flags.length || ""}</td></tr>`).join("")}
+    ${st.students.map((s) => `<tr><td>${esc(s.name || s.id)}</td><td><span class="chip st-${s.status}">${esc(s.status_label)}</span></td><td class="r num">${s.total == null ? (Object.keys(s.scores).length ? "partly scored" : "—") : fmt(s.total) + " / " + fmt(r.total_points)}</td><td class="muted">${s.flags.length || ""}</td></tr>`).join("")}
     </tbody></table></div>
+    <details class="tools"><summary>Testing tools</summary><div class="actions" style="margin-top:8px">
+      <button class="btn" data-act="simulate" ${g ? "disabled" : ""}>Fill everyone with simulated scores</button>
+      <span class="hint">Made-up scores for trying the workflow. Don't use on real grading.</span></div></details>
     <div class="actions"><button class="btn primary" data-step="3">Next: review</button></div>`;
+}
+
+function viewSettings() {
+  const t = S.settings;
+  if (!t) return "";
+  return `<div class="modal-bg" data-act="close-settings-bg"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="set-title">
+    <h2 id="set-title">Settings</h2>
+    <div class="field"><label for="set-key">API key</label>
+      <input type="password" id="set-key" placeholder="${t.has_key ? esc("Saved: " + t.key_hint + "  (type a new one to replace it)") : "sk-ant-…"}" autocomplete="off">
+      <span class="hint">${t.key_source === "environment" ? "Using the ANTHROPIC_API_KEY environment variable. " : ""}Saved only on this computer, in <span class="mono">${esc(t.settings_file)}</span>. Never put it in the repo.</span></div>
+    <div class="field"><label for="set-model">Model</label>
+      <input type="text" id="set-model" value="${esc(t.model)}" spellcheck="false">
+      <span class="hint">The model name from your API console, for example claude-sonnet-5-5.</span></div>
+    <label class="check"><input type="checkbox" id="set-anon" ${t.anonymize ? "checked" : ""}><span><b>Remove names before sending</b><br><span class="hint">Replaces the student's full name, ID and email in the notebook with [STUDENT]. First names written alone aren't caught.</span></span></label>
+    <label class="check"><input type="checkbox" id="set-img" ${t.send_images ? "checked" : ""}><span><b>Send chart images</b><br><span class="hint">Lets the AI see the charts (better grading of analysis criteria, slightly higher cost).</span></span></label>
+    <p class="hint">What gets sent: the rubric and the notebook (code, outputs, charts). Videos never leave this computer. Each request is saved in <span class="mono">_grading/ai_log/</span>.</p>
+    <div class="actions"><button class="btn primary" data-act="save-settings">Save</button><button class="btn" data-act="test-connection" ${t.has_key ? "" : "disabled"}>Test connection</button>${t.has_key && t.key_source === "settings" ? `<button class="btn" data-act="remove-key">Remove key</button>` : ""}<button class="btn" data-act="close-settings" style="margin-left:auto">Close</button></div>
+  </div></div>`;
 }
 
 // ----- Review: three parts that update independently (so the video keeps playing)
@@ -402,7 +458,7 @@ function render() {
   root.style.height = "100%";
   const work = $("#work"), y = work ? work.scrollTop : 0;
   const eb = $("#evbody"), ey = eb ? eb.scrollTop : 0;
-  root.innerHTML = viewShell();
+  root.innerHTML = viewShell() + viewSettings();
   if ($("#work")) $("#work").scrollTop = y;
   if ($("#evbody")) $("#evbody").scrollTop = ey;
 }
@@ -423,19 +479,68 @@ async function goStep(i) {
   render();
 }
 
-async function runSimulated(all) {
-  const list = S.state.students.filter((s) => (s.has_notebook || s.has_video) && (all || s.status === "pending"));
-  S.grading = { done: 0, total: list.length, current: "" };
+async function runSimulated() {
+  const list = S.state.students.filter((s) => s.has_notebook || s.has_video);
+  S.grading = { done: 0, total: list.length, current: [], tokens: 0 };
   render();
   for (const s of list) {
-    S.grading.current = s.name || s.id;
-    render();
-    await call("grade_simulated", s.id);
+    await callQuiet("grade_simulated", s.id);
     S.grading.done++;
+    if (S.step === 2) render();
   }
   S.grading = null;
   await refresh();
-  toast(`Drafted ${list.length} students. ${S.state.counts.graded} are waiting for review.`);
+  toast(`Filled ${list.length} students with simulated scores.`);
+}
+
+// Grade with AI, 3 students at a time. Stop finishes the ones in progress.
+async function runAI(all) {
+  const list = S.state.students.filter((s) => s.has_notebook && (all || s.status === "pending"));
+  S.grading = { done: 0, total: list.length, current: [], tokens: 0, stop: false };
+  const result = { ok: 0, skipped: 0, failed: [], tokens: 0 };
+  render();
+  let next = 0;
+  async function worker() {
+    while (next < list.length && !S.grading.stop) {
+      const s = list[next++];
+      const label = s.name || s.id;
+      S.grading.current.push(label);
+      if (S.step === 2) render();
+      const r = await callQuiet("grade_student", s.id);
+      S.grading.current = S.grading.current.filter((x) => x !== label);
+      if (r.failed) {
+        result.failed.push({ name: label, error: r.error });
+        // A bad key or model will fail for everyone: stop right away.
+        if (/API key|wasn't found|Settings/.test(r.error)) S.grading.stop = true;
+      } else if (r.skipped) result.skipped++;
+      else {
+        result.ok++;
+        const u = r.usage || {};
+        result.tokens += (u.input_tokens || 0) + (u.output_tokens || 0);
+        S.grading.tokens = result.tokens;
+      }
+      S.grading.done++;
+      if (S.step === 2) render();
+    }
+  }
+  await Promise.all([worker(), worker(), worker()]);
+  S.grading = null;
+  S.lastRun = result;
+  await refresh();
+  if (result.failed.length) toast(`${result.failed.length} student(s) couldn't be graded. See the list in Grading.`, true);
+  else toast(`AI graded ${result.ok} notebook${result.ok === 1 ? "" : "s"}. They're waiting for you in Review.`);
+}
+
+async function openSettings() {
+  const t = await call("get_settings");
+  if (ok(t)) { S.settings = t; render(); setTimeout(() => { const k = $("#set-key"); if (k) k.focus(); }, 0); }
+}
+async function saveSettings() {
+  const key = $("#set-key").value.trim();
+  const values = { model: $("#set-model").value.trim(), anonymize: $("#set-anon").checked, send_images: $("#set-img").checked };
+  if (key) values.api_key = key;
+  const t = await call("save_settings", values);
+  if (ok(t)) { S.settings = t; await refresh(); toast("Settings saved."); }
 }
 
 async function afterScoreChange() {
@@ -471,8 +576,25 @@ async function onAct(act) {
   } else if (act === "scan") {
     const st = await call("scan");
     if (ok(st)) { S.state = st; render(); toast(`Found ${st.students.length} students.`); }
-  } else if (act === "simulate" || act === "simulate-all") {
-    await runSimulated(act === "simulate-all");
+  } else if (act === "simulate") {
+    await runSimulated();
+  } else if (act === "ai-grade" || act === "ai-grade-all") {
+    await runAI(act === "ai-grade-all");
+  } else if (act === "stop") {
+    if (S.grading) { S.grading.stop = true; render(); }
+  } else if (act === "settings") {
+    await openSettings();
+  } else if (act === "close-settings") {
+    S.settings = null; render();
+  } else if (act === "save-settings") {
+    await saveSettings();
+  } else if (act === "remove-key") {
+    const t = await call("save_settings", { api_key: "" });
+    if (ok(t)) { S.settings = t; await refresh(); toast("API key removed."); }
+  } else if (act === "test-connection") {
+    toast("Testing…");
+    const r = await call("test_connection");
+    if (ok(r)) toast(r.message);
   } else if (act === "approve") {
     const cur = S.sel;
     if (!ok(await call("approve", cur))) return;
@@ -494,6 +616,7 @@ async function onAct(act) {
 }
 
 document.addEventListener("click", async (e) => {
+  if (e.target.dataset && e.target.dataset.act === "close-settings-bg") { S.settings = null; return render(); }
   const b = e.target.closest("button,[data-crit]");
   if (!b || b.disabled) return;
   const d = b.dataset;
@@ -522,6 +645,7 @@ document.addEventListener("click", async (e) => {
   if (d.act) return onAct(d.act);
 });
 document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && S.settings) { S.settings = null; render(); return; }
   const r = e.target.closest && e.target.closest("[data-crit]");
   if (r && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); r.click(); }
 });

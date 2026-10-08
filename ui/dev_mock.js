@@ -5,6 +5,7 @@ const D = {"rubric": {"assignment": "Project 2 - Housing Price Regression", "ver
 const R = D.rubric;
 const LBL = { pending: "Not graded", graded: "Needs review", approved: "Approved" };
 let opened = false, rubricOn = false;
+let settings = { has_key: false, key_hint: "", key_source: null, model: "claude-sonnet-5-5", anonymize: true, send_images: true, settings_file: "~/Library/Application Support/Easy Grade/settings.json" };
 const students = D.students.map((s) => Object.assign({}, s, { status: "pending", scores: {}, feedback: "", flags: s.flags.slice() }));
 const find = (id) => { const s = students.find((x) => x.id === id); if (!s) throw new Error("No submission for student '" + id + "'."); return s; };
 const total = (s) => { const v = R.criteria.map((c) => s.scores[c.id] && s.scores[c.id].final); return v.some((x) => x == null) ? null : v.reduce((a, b) => a + b, 0); };
@@ -20,7 +21,7 @@ function state() {
       scores: Object.fromEntries(Object.entries(s.scores).map(([k, v]) => [k, { final: v.final, ai: v.ai, changed: v.ai != null && v.final !== v.ai }])) };
   });
   return { ok: true, folder: "/Users/professor/Grading/Project 2 (sample)", folder_name: "Project 2 (sample)", grading_dir: "_grading",
-    roster: "roster.csv", rubric: rubricOn ? R : null, ai_ready: false, students: list, counts };
+    roster: "roster.csv", rubric: rubricOn ? R : null, ai_ready: settings.has_key, students: list, counts };
 }
 const wrap = (fn) => async (...a) => { try { return fn(...a); } catch (e) { return fail(e.message); } };
 const api = {
@@ -75,6 +76,31 @@ const api = {
     if (s.status !== "approved") s.status = "graded";
     s.feedback = s.feedback || "Good structure overall. See the notes on each criterion.";
     return { ok: true };
+  }),
+  get_settings: wrap(() => Object.assign({ ok: true }, settings)),
+  save_settings: wrap((v) => {
+    if (v.api_key != null) {
+      if (v.api_key && !v.api_key.startsWith("sk-")) return fail('That doesn\'t look like an API key. It should start with "sk-".');
+      settings.has_key = !!v.api_key; settings.key_hint = v.api_key ? v.api_key.slice(0, 7) + "…" + v.api_key.slice(-4) : ""; settings.key_source = v.api_key ? "settings" : null;
+    }
+    ["model", "anonymize", "send_images"].forEach((k) => { if (v[k] != null) settings[k] = v[k]; });
+    return Object.assign({ ok: true }, settings);
+  }),
+  test_connection: wrap(async () => { await new Promise((r) => setTimeout(r, 400)); return settings.has_key ? { ok: true, message: "Connected. Model: " + settings.model + " (mock)" } : fail("Add your API key in Settings first."); }),
+  grade_student: wrap(async (id) => {
+    if (!settings.has_key) return fail("Add your API key in Settings first.");
+    await new Promise((r) => setTimeout(r, 600));
+    const s = find(id); if (!s.has_notebook) return { ok: true, skipped: true, reason: "No notebook" };
+    const rnd = hash("ai" + id);
+    R.criteria.filter((c) => c.source === "notebook").forEach((c) => {
+      const lvl = c.levels[Math.min(c.levels.length - 1, Math.floor(rnd() * 2.4))], prev = s.scores[c.id] || {};
+      const changed = prev.ai != null && prev.final !== prev.ai;
+      s.scores[c.id] = { ai: lvl.score, final: changed ? prev.final : lvl.score, conf: Math.round((0.6 + rnd() * 0.38) * 100) / 100,
+        reason: "(mock AI) " + lvl.description, evidence: ["cell " + (2 + Math.floor(rnd() * 7))], comment: prev.comment || "" };
+    });
+    if (s.status !== "approved") s.status = "graded";
+    s.feedback = s.feedback || "(mock AI) Clear cleaning steps. Add a written takeaway after each chart.";
+    return { ok: true, usage: { input_tokens: 9000, output_tokens: 700 } };
   }),
   export_all: wrap((incl) => { const st = state();
     return { ok: true, folder: "_grading", lines: [
