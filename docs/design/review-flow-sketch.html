@@ -137,6 +137,15 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .preview .ok-line { color: var(--ok); font-weight: 500; }
 .preview .warn-line { color: var(--warn); }
 .privacy { font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: flex-start; }
+.rubric-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.rubric-row select { flex: 1; min-width: 0; }
+.rubric-used { font-size: 13px; color: var(--ok); }
+.rubric-panel { border: 1px dashed var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 10px; background: var(--soft); }
+.rubric-panel .panel-title { font-size: 14px; font-weight: 600; }
+.mini { width: 100%; border-collapse: collapse; font-size: 13px; }
+.mini td { padding: 5px 10px 5px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+.mini tr:last-child td { border-bottom: 0; }
+.mini .ranges { color: var(--muted); }
 .start.wide { max-width: 880px; }
 .match-summary { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: 14px; }
 .match-summary .ok-line { color: var(--ok); font-weight: 500; }
@@ -213,9 +222,28 @@ body { margin: 0; }
     <div class="panel">
       <div class="field">
         <label for="rubric">Rubric</label>
+        <div class="rubric-row">
         <select id="rubric">
           <option>CAP3321C Final Project · 200 points · 6 categories</option>
         </select>
+          <button class="btn" id="replace-rubric" type="button" aria-expanded="false" aria-controls="rubric-panel">Replace rubric</button>
+        </div>
+        <span class="rubric-used" id="rubric-used" hidden></span>
+        <div class="rubric-panel" id="rubric-panel" hidden>
+          <span class="panel-title">Upload the new rubric</span>
+          <span class="hint">An Excel or CSV file made from the EasyGrade rubric template: one row per category level, with its point range. You'll see what was read before it's used.</span>
+          <div class="folder" id="rubric-file">
+            <span class="folder-path" id="rubric-file-name">No file chosen</span>
+            <label class="btn" for="rubric-input">Choose file</label>
+            <input class="file-input" type="file" id="rubric-input" accept=".xlsx,.csv">
+          </div>
+          <button class="link-btn" id="rubric-sample" type="button" style="justify-self:start">Use a sample rubric file</button>
+          <div class="preview" id="rubric-preview" hidden></div>
+          <div class="start-actions" id="rubric-actions" hidden>
+            <button class="link-btn" id="rubric-cancel" type="button">Cancel</button>
+            <button class="btn primary" id="rubric-use" type="button">Use this rubric</button>
+          </div>
+        </div>
       </div>
       <div class="field">
         <span class="label">Submissions folder</span>
@@ -272,7 +300,7 @@ body { margin: 0; }
   <div class="head">
     <div>
       <h1>CAP3321C Final Project</h1>
-      <div class="sub"><span class="num" id="count">0</span> of 4 teams reviewed</div>
+      <div class="sub"><span class="num" id="count">0</span> of 4 teams reviewed · Graded with <span id="graded-with">CAP3321C Final Project rubric</span></div>
     </div>
     <button class="link-btn" id="new-batch">Start a new batch</button>
   </div>
@@ -707,6 +735,7 @@ const RUN_STEPS = [
 ];
 let timers = [];
 function runBatch() {
+  document.getElementById("graded-with").textContent = rubricSelect.options[rubricSelect.selectedIndex].text.split(" · ")[0] + " rubric";
   timers.forEach(clearTimeout); timers = [];
   showView("processing-view");
   document.getElementById("to-review").hidden = true;
@@ -821,6 +850,59 @@ function applyMatches() {
 document.getElementById("start-btn").addEventListener("click", () => { showView("match-view"); renderMatch(); });
 document.getElementById("back-to-start").addEventListener("click", () => showView("start-view"));
 document.getElementById("grade-btn").addEventListener("click", () => { applyMatches(); runBatch(); });
+
+/* Replace rubric (uses Ingest's rubric import). The sketch can't read the file, so any file shows the sample rubric. */
+const rubricSelect = document.getElementById("rubric");
+const rubricPanel = document.getElementById("rubric-panel");
+let pendingRubricFile = null;
+function resetRubricPanel() {
+  pendingRubricFile = null;
+  document.getElementById("rubric-file-name").textContent = "No file chosen";
+  document.getElementById("rubric-file").classList.remove("chosen");
+  document.getElementById("rubric-preview").hidden = true;
+  document.getElementById("rubric-actions").hidden = true;
+  document.getElementById("rubric-input").value = "";
+}
+function previewRubric(fileName) {
+  pendingRubricFile = fileName;
+  document.getElementById("rubric-file-name").textContent = fileName;
+  document.getElementById("rubric-file").classList.add("chosen");
+  const points = CATS.reduce((sum, c) => sum + c.max, 0);
+  const preview = document.getElementById("rubric-preview");
+  preview.innerHTML = `<span class="ok-line">✓ Read ${CATS.length} categories with 3 levels each. The points add up to ${points}.</span>
+    <table class="mini">${CATS.map(c => `<tr><td>${esc(c.name)}</td><td class="num">${c.max} pts</td>
+      <td class="ranges num">Excellent ${c.ex}–${c.max} · Good ${c.good}–${c.ex - 1} · Needs work 0–${c.good - 1}</td></tr>`).join("")}</table>`;
+  preview.hidden = false;
+  document.getElementById("rubric-actions").hidden = false;
+}
+document.getElementById("replace-rubric").addEventListener("click", e => {
+  rubricPanel.hidden = !rubricPanel.hidden;
+  e.currentTarget.setAttribute("aria-expanded", String(!rubricPanel.hidden));
+  if (rubricPanel.hidden) resetRubricPanel();
+});
+document.getElementById("rubric-input").addEventListener("change", e => {
+  const f = e.target.files && e.target.files[0];
+  if (f) previewRubric(f.name);
+});
+document.getElementById("rubric-sample").addEventListener("click", () => previewRubric("CAP3321C_Final_Rubric_Fall2026.xlsx"));
+document.getElementById("rubric-cancel").addEventListener("click", () => {
+  rubricPanel.hidden = true;
+  document.getElementById("replace-rubric").setAttribute("aria-expanded", "false");
+  resetRubricPanel();
+});
+document.getElementById("rubric-use").addEventListener("click", () => {
+  const label = `${pendingRubricFile.replace(/\.(xlsx|csv)$/i, "")} · ${CATS.reduce((s, c) => s + c.max, 0)} points · ${CATS.length} categories`;
+  const option = new Option(label, label, true, true);
+  rubricSelect.add(option);
+  rubricSelect.value = label;
+  const used = document.getElementById("rubric-used");
+  used.textContent = `✓ Using the rubric from ${pendingRubricFile}`;
+  used.hidden = false;
+  rubricPanel.hidden = true;
+  document.getElementById("replace-rubric").setAttribute("aria-expanded", "false");
+  resetRubricPanel();
+});
+rubricSelect.addEventListener("change", () => { document.getElementById("rubric-used").hidden = true; });
 document.addEventListener("change", e => {
   if (!e.target.dataset.pick) return;
   matchChoice[e.target.dataset.pick] = e.target.value;
