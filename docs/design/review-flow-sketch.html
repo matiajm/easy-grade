@@ -301,6 +301,7 @@ body { margin: 0; }
   <p class="sketch">Design sketch with fake teams. Nothing is uploaded or graded here. Wording is a draft.</p>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const CATS = [
   { id: "data_cleaning", name: "Data Cleaning & Preparation", max: 40, ex: 36, good: 28 },
@@ -466,7 +467,7 @@ function render() {
 document.addEventListener("click", e => {
   const el = e.target.closest("[data-toggle],[data-review],[data-edit],[data-done],[data-reset],[data-fill],#download");
   if (!el) return;
-  if (el.id === "download") { document.getElementById("toast").textContent = "Saved. In the real app this writes the Excel file (Grades and Details tabs)."; return; }
+  if (el.id === "download") { downloadExcel(); return; }
   const d = el.dataset;
   if (d.toggle) { const st = state[d.toggle]; st.open = !st.open; if (!st.open) st.editing = false; }
   if (d.review) {
@@ -497,6 +498,100 @@ document.addEventListener("change", e => {
   render();
   document.getElementById(`in-${d.team}-${c.id}`)?.focus();
 });
+
+/* Download: builds the Excel from the teams marked reviewed (Grades, Details, Rubric), as in the example file. */
+const LEVEL_LABEL = (c, s) => s >= c.ex ? "Excellent" : s >= c.good ? "Good" : "Needs Work";
+const LEVEL_FORMULA = r => `IF(E${r}>=INDEX(Rubric!$C$2:$C$7,MATCH(C${r},Rubric!$A$2:$A$7,0)),"Excellent",IF(E${r}>=INDEX(Rubric!$D$2:$D$7,MATCH(C${r},Rubric!$A$2:$A$7,0)),"Good","Needs Work"))`;
+
+function attentionText(t) {
+  const st = state[t.id];
+  const entered = CATS.filter(c => t.scores[c.id] == null && st.scores[c.id] != null);
+  let items = t.check.map(x => entered.length && x.startsWith("No video")
+    ? "No video in the team's folder; you entered the Presentation score" : x);
+  const diff = diffFromSuggestion(t);
+  if (diff) items = items.concat(`You changed the suggested score by ${diff > 0 ? "+" : ""}${diff}`);
+  return items.join("; ");
+}
+const aiText = t => t.ai.length ? "Review: " + t.ai.join("; ") : "No concern";
+
+function buildWorkbook() {
+  const X = XLSX.utils;
+  const reviewed = TEAMS.filter(t => state[t.id].reviewed);
+  const cell = (ws, row, col, v, f) => { ws[X.encode_cell({ r: row - 1, c: col })] = { t: typeof v === "number" ? "n" : "s", v, f }; };
+
+  // Details: one row per category, then a team total. Column B stays empty on total rows so Grades never counts them twice.
+  const det = [["Change a score in column E and its level, the team total and the Grades tab update."], [],
+    ["Team", "Students", "Category", "Level", "Score", "Out of", "Why this score", "Evidence"]];
+  const detFormulas = [];
+  for (const t of reviewed) {
+    const st = state[t.id];
+    const start = det.length + 1;
+    for (const c of CATS) {
+      const row = det.length + 1;
+      const s = st.scores[c.id];
+      const entered = t.scores[c.id] == null;
+      det.push([t.id, t.students.join(", "), c.name, LEVEL_LABEL(c, s), s, c.max,
+        entered ? "Entered by the professor: no video in the team's folder." : t.reasons[c.id][0],
+        entered ? "" : t.reasons[c.id][1]]);
+      detFormulas.push([row, 3, LEVEL_LABEL(c, s), LEVEL_FORMULA(row)]);
+      detFormulas.push([row, 5, c.max, `INDEX(Rubric!$B$2:$B$7,MATCH(C${row},Rubric!$A$2:$A$7,0))`]);
+    }
+    const row = det.length + 1;
+    det.push([t.id, "", "Team total", "", total(t), 200, "", ""]);
+    detFormulas.push([row, 4, total(t), `SUM(E${start}:E${row - 1})`]);
+    detFormulas.push([row, 5, 200, `SUM(F${start}:F${row - 1})`]);
+    det.push([]);
+  }
+  const ds = X.aoa_to_sheet(det);
+  detFormulas.forEach(([row, col, v, f]) => cell(ds, row, col, v, f));
+  ds["!cols"] = [10, 26, 32, 13, 8, 8, 60, 60].map(wch => ({ wch }));
+  const end = det.length + 5;
+
+  // Grades: what the professor asked for. Score adds up this student's team rows on Details.
+  const gr = [["Student name", "Score (out of 200)", "Needs your attention", "AI usage"]];
+  reviewed.forEach(t => t.students.forEach(name => gr.push([name, total(t), attentionText(t), aiText(t)])));
+  const gs = X.aoa_to_sheet(gr.concat([[], ["Only teams you marked reviewed are included. The breakdown behind each score is on the Details tab."]]));
+  for (let row = 2; row <= gr.length; row++) {
+    cell(gs, row, 1, gr[row - 1][1], `SUMIFS(Details!$E$4:$E$${end},Details!$B$4:$B$${end},"*"&A${row}&"*")`);
+  }
+  gs["!cols"] = [20, 12, 70, 55].map(wch => ({ wch }));
+
+  // Rubric: the point ranges the formulas read.
+  const rub = [["Category", "Points", "Excellent from", "Good from", "Needs Work"]]
+    .concat(CATS.map(c => [c.name, c.max, c.ex, c.good, `0 to ${c.good - 1}`]))
+    .concat([["Total", 200], [], ["Source: CAP3321C Final Project Rubric (200 points)."]]);
+  const rs = X.aoa_to_sheet(rub);
+  cell(rs, CATS.length + 2, 1, 200, `SUM(B2:B${CATS.length + 1})`);
+  rs["!cols"] = [38, 10, 15, 12, 13].map(wch => ({ wch }));
+
+  const wb = X.book_new();
+  X.book_append_sheet(wb, gs, "Grades");
+  X.book_append_sheet(wb, ds, "Details");
+  X.book_append_sheet(wb, rs, "Rubric");
+  return wb;
+}
+
+async function downloadExcel() {
+  const toast = document.getElementById("toast");
+  if (!window.XLSX) { toast.textContent = "The Excel library didn't load. Check your internet connection and try again."; return; }
+  const filename = "EasyGrade_grades.xlsx";
+  const wb = buildWorkbook();
+  // Inside Claude the page asks the viewer to confirm the save. Opened as a plain web page (the repo copy), the browser downloads it.
+  const downloads = window.claude && typeof window.claude.use === "function" ? await window.claude.use("downloads") : null;
+  if (downloads) {
+    try {
+      await downloads.save({ filename, data: new Blob([XLSX.write(wb, { bookType: "xlsx", type: "array" })]) });
+      toast.textContent = `Saved ${filename} (Grades, Details and Rubric tabs).`;
+    } catch (e) {
+      const code = e && e.code;
+      toast.textContent = code === "declined" ? "Download cancelled." : code === "rate_limited" ? "A save prompt is already open." : "Downloads aren't available in this view.";
+    }
+    return;
+  }
+  if (window.claude) { toast.textContent = "Downloads aren't available in this view."; return; }
+  XLSX.writeFile(wb, filename);
+  toast.textContent = `Downloaded ${filename} (Grades, Details and Rubric tabs).`;
+}
 
 /* Start and progress screens (simulated: the sketch never reads or uploads the file) */
 const views = ["start-view", "match-view", "processing-view", "review-view"];
