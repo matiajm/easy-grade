@@ -167,7 +167,9 @@ def header(team, level_collab, quirks):
         return "**Section:** A\n**Date:** May 3, 2026\n**Responsibilities:** We split the work evenly."
     a, b = team["names"]
     lines = [f"**Students:** {a}, {b}", "**Section:** A", "**Date:** May 3, 2026"]
-    if level_collab == E:
+    if "lopsided" in quirks:  # only one partner is credited with any work
+        lines.append(f"**Responsibilities:** {a}: Q1 to Q4, all charts and the written summaries.")
+    elif level_collab == E:
         lines.append(f"**Responsibilities:** {a}: Q1 cleaning, Q3 monthly trend, written summaries. "
                      f"{b}: Q2 ZIP code chart, Q4 cuisine table, chart formatting. Both: presentation.")
     elif level_collab == G:
