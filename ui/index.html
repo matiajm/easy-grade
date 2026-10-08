@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Easy Grade</title>
+<style>
+/* Same look as the demo page. System fonts only: the app works offline. */
+:root{
+  --bg:#F2F4F7; --surface:#FFFFFF; --surface-2:#EDF0F4; --ink:#17202B; --muted:#5A6576; --line:#D8DDE5;
+  --accent:#2B54C6; --accent-ink:#FFFFFF; --accent-soft:#E2E9FB;
+  --vid:#7B3BB0; --vid-soft:#F0E5F8;
+  --ok:#1D774A; --ok-soft:#DDF1E5; --warn:#8F5B00; --warn-soft:#FFF0D2; --bad:#B0222B; --bad-soft:#FBE2E3;
+  --code-bg:#F7F8FA;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:8px; color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0E1218; --surface:#151A22; --surface-2:#1C222C; --ink:#E5E9EF; --muted:#9AA4B4; --line:#2A313C;
+  --accent:#7E9DF4; --accent-ink:#0E1218; --accent-soft:#1E2946;
+  --vid:#C18FEA; --vid-soft:#2C1F3A;
+  --ok:#5BC38C; --ok-soft:#142D1F; --warn:#E6B24D; --warn-soft:#32270F; --bad:#F27E85; --bad-soft:#38191C;
+  --code-bg:#11161D; color-scheme:dark;}}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--f-body)}
+h1,h2,h3{margin:0;font-weight:600;text-wrap:balance}
+h1{font-size:28px;letter-spacing:-.01em}
+h2{font-size:20px}
+h3{font-size:14px}
+p{margin:0}
+.muted{color:var(--muted)}
+.mono{font-family:var(--f-mono)}
+.num{font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{border:1px solid var(--line);background:var(--surface);padding:7px 12px;border-radius:var(--r);font-weight:500;font-size:13px}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* shell */
+.shell{height:100%;display:grid;grid-template-rows:auto 1fr;}
+.titlebar{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--surface-2);min-width:0}
+.titlebar .name{font-weight:600}
+.titlebar .path{font:12px var(--f-mono);color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.titlebar .right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.pill{font:500 11px var(--f-mono);padding:3px 8px;border-radius:99px;background:var(--ok-soft);color:var(--ok);white-space:nowrap}
+.body{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:0}
+.rail{border-right:1px solid var(--line);padding:12px 10px;display:flex;flex-direction:column;gap:4px;background:var(--surface);overflow:auto}
+.step{display:grid;grid-template-columns:26px 1fr;gap:2px 10px;align-items:center;text-align:left;border:0;background:none;padding:10px;border-radius:var(--r)}
+.step .n{grid-row:span 2;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font:500 12px var(--f-mono);border:1px solid var(--line);color:var(--muted)}
+.step .t{font-weight:600}
+.step .s{font-size:12px;color:var(--muted)}
+.step:hover{background:var(--surface-2)}
+.step[aria-current="step"]{background:var(--accent-soft)}
+.step[aria-current="step"] .n{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.step:disabled{opacity:.45;cursor:not-allowed}
+.work{padding:22px;overflow:auto;display:grid;gap:18px;align-content:start;grid-auto-rows:max-content;min-width:0}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.lede{color:var(--muted);max-width:70ch;margin-top:4px}
+
+/* bits */
+.chip{display:inline-flex;align-items:center;gap:5px;font:500 11px/1 var(--f-mono);padding:4px 7px;border-radius:99px;white-space:nowrap}
+.src-notebook{background:var(--accent-soft);color:var(--accent)}
+.src-video{background:var(--vid-soft);color:var(--vid)}
+.src-both{background:var(--surface-2);color:var(--ink);border:1px solid var(--line)}
+.st-approved{background:var(--ok-soft);color:var(--ok)}
+.st-graded{background:var(--warn-soft);color:var(--warn)}
+.st-pending,.st-error{background:var(--surface-2);color:var(--muted)}
+.flag{background:var(--bad-soft);color:var(--bad)}
+.ev{border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.ev:hover{border-color:var(--accent);color:var(--accent)}
+.note{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:12px 14px;display:grid;gap:6px}
+.note.warn{border-color:var(--warn);background:var(--warn-soft)}
+.stats{display:flex;gap:10px;flex-wrap:wrap}
+.stat{border:1px solid var(--line);border-radius:var(--r);padding:8px 12px;display:grid;min-width:110px;background:var(--surface)}
+.stat b{font-size:20px;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted)}
+.tbl-wrap{overflow:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 11px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--surface-2);white-space:nowrap;position:sticky;top:0}
+tr:last-child td{border-bottom:0}
+.r{text-align:right}
+.crit-row{cursor:pointer}
+.crit-row:hover td{background:var(--surface-2)}
+.levels td{background:var(--code-bg)}
+.lvls{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}
+.lvl{border:1px solid var(--line);border-radius:6px;padding:8px;background:var(--surface)}
+td.chg{color:var(--bad);font-weight:600}
+tr.unapproved td{background:var(--warn-soft)}
+.progress{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden;border:1px solid var(--line)}
+.progress i{display:block;height:100%;background:var(--accent);transition:width .2s}
+
+/* welcome */
+.welcome{display:grid;place-items:center;height:100%;padding:24px}
+.welcome .card{max-width:560px;display:grid;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:28px}
+.welcome ol{margin:0;padding-left:20px;color:var(--muted);display:grid;gap:4px}
+
+/* review */
+.review{display:grid;grid-template-columns:200px minmax(0,1fr) minmax(320px,400px);gap:16px;align-items:start}
+.queue{display:grid;gap:4px;max-height:calc(100vh - 220px);overflow:auto}
+.qitem{display:grid;grid-template-columns:1fr auto;gap:2px 6px;border:1px solid transparent;background:none;text-align:left;padding:8px;border-radius:6px}
+.qitem:hover{background:var(--surface-2)}
+.qitem[aria-selected="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.qitem .nm{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qitem .tt{font:500 12px var(--f-mono);color:var(--muted)}
+.qitem .chip{grid-column:1/-1;justify-self:start}
+.panel{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);min-width:0}
+.tabs{display:flex;border-bottom:1px solid var(--line);align-items:center}
+.tab{border:0;background:none;padding:10px 14px;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs .file{margin-left:auto;padding:0 12px;font:11px var(--f-mono);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.panel-body{padding:12px;display:grid;gap:10px;max-height:calc(100vh - 230px);overflow:auto}
+.cell{display:grid;grid-template-columns:48px minmax(0,1fr);gap:8px;border-radius:6px;padding:4px;transition:background .3s}
+.cell .in{font:11px var(--f-mono);color:var(--muted);padding-top:8px;text-align:right;line-height:1.3}
+.cell pre{margin:0;font:12px/1.5 var(--f-mono);background:var(--code-bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;overflow-x:auto}
+.cell .md{padding:4px 10px;white-space:pre-wrap}
+.cell .out{font:12px/1.5 var(--f-mono);padding:6px 10px;white-space:pre;overflow-x:auto}
+.cell .out.err{color:var(--bad);background:var(--bad-soft);border-radius:6px}
+.cell img{max-width:100%;height:auto;display:block;margin-top:6px;background:#fff;border-radius:4px}
+.cell.hl{background:var(--warn-soft)}
+.empty{padding:28px 16px;text-align:center;color:var(--muted)}
+video{width:100%;border-radius:6px;background:#000;max-height:60vh}
+.scorecard{display:grid;gap:10px}
+.crit{border:1px solid var(--line);border-radius:var(--r);padding:10px;display:grid;gap:8px;background:var(--surface)}
+.crit.low{border-color:var(--warn)}
+.crit-top{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.seg{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.seg button{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:4px 8px;font:500 12px var(--f-mono)}
+.seg button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.seg .ai{font-size:9px;color:var(--accent);margin-left:4px}
+.seg button[aria-pressed="true"] .ai{color:var(--surface)}
+.meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--muted)}
+.changed{color:var(--bad);font:600 11px var(--f-mono)}
+textarea{width:100%;border:1px solid var(--line);border-radius:6px;padding:6px 8px;font:13px var(--f-body);background:var(--surface);color:var(--ink);resize:vertical}
+.totalbar{position:sticky;bottom:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap}
+.totalbar b{font-size:22px;font-variant-numeric:tabular-nums}
+.flagline{background:var(--bad-soft);color:var(--bad);border-radius:6px;padding:6px 10px;font-size:13px}
+.result{font:12px/1.7 var(--f-mono);white-space:pre-wrap}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:10px 14px;border-radius:var(--r);font-size:13px;max-width:calc(100vw - 32px);box-shadow:0 8px 24px rgb(0 0 0 / .25);z-index:10}
+.toast.err{background:var(--bad);color:#fff}
+
+@media (max-width:1180px){.review{grid-template-columns:180px minmax(0,1fr)}.review .scorecol{grid-column:1/-1}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="root" class="welcome"><p class="muted">Starting…</p></div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(function () {
+"use strict";
+// ---------------------------------------------------------------------------
+// State. Python is the source of truth; this only remembers what's on screen.
+// ---------------------------------------------------------------------------
+const S = {
+  state: null,          // from api.get_state()
+  step: 0,              // 0 rubric · 1 submissions · 2 grading · 3 review · 4 export
+  sel: null,            // selected student id in Review
+  student: null,        // from api.get_student()
+  evTab: "notebook",
+  hlCell: null,
+  openCrit: null,
+  grading: null,        // {done, total, current}
+  exportResult: null,
+  includeUnapproved: false,
+  replaceWarn: null,
+};
+const SRC = { notebook: "Notebook", video: "Video", both: "Both" };
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = (n) => (n == null ? "—" : String(Math.round(n * 10) / 10));
+const isMac = /Mac/i.test(navigator.platform || navigator.userAgent);
+
+function toast(msg, isErr) {
+  const t = $("#toast");
+  t.textContent = msg;
+  t.className = "toast" + (isErr ? " err" : "");
+  t.hidden = false;
+  clearTimeout(toast.h);
+  toast.h = setTimeout(() => (t.hidden = true), isErr ? 6000 : 3200);
+}
+
+// Call Python. Returns the result, or null after showing the error.
+async function call(name, ...args) {
+  try {
+    const r = await window.pywebview.api[name](...args);
+    if (!r || r.ok === false) {
+      if (!(r && r.cancelled)) toast((r && r.error) || "Something went wrong.", true);
+      return r && r.error ? { failed: true, error: r.error } : null;
+    }
+    return r;
+  } catch (e) {
+    toast(String((e && e.message) || e), true);
+    return null;
+  }
+}
+const ok = (r) => r && !r.failed;
+
+async function refresh() {
+  const st = await call("get_state");
+  if (ok(st)) S.state = st;
+  render();
+}
+async function loadStudent(id) {
+  S.sel = id;
+  const d = await call("get_student", id);
+  S.student = ok(d) ? d : null;
+}
+
+// ---------------------------------------------------------------------------
+// Views
+// ---------------------------------------------------------------------------
+function viewWelcome() {
+  return `<div class="card">
+    <h1>Easy Grade</h1>
+    <p class="muted">Grade notebook + video projects against your rubric. Everything stays on this computer.</p>
+    <ol>
+      <li>Open the folder with the students' submissions (the unzipped LMS download).</li>
+      <li>Choose the rubric.</li>
+      <li>Grade, review each student, approve.</li>
+      <li>Export grades to Excel and a gradebook CSV.</li>
+    </ol>
+    <p class="muted" style="font-size:13px">The app saves its work in a <span class="mono">_grading</span> folder inside the folder you open, so you can stop and come back later.</p>
+    <div class="actions"><button class="btn primary" data-act="choose-folder">Open submissions folder…</button></div>
+  </div>`;
+}
+
+function stepsInfo() {
+  const st = S.state, c = st.counts, r = st.rubric;
+  return [
+    { t: "Rubric", s: r ? `${r.criteria.length} criteria · ${fmt(r.total_points)} pts` : "Not chosen yet", on: true },
+    { t: "Submissions", s: `${st.students.length} students · ${c.flagged} flagged`, on: true },
+    { t: "Grading", s: `${c.graded + c.approved} graded`, on: !!r },
+    { t: "Review", s: `${c.graded} waiting`, on: !!r },
+    { t: "Export", s: `${c.approved} approved`, on: !!r },
+  ];
+}
+
+function viewShell() {
+  const st = S.state;
+  return `<div class="shell">
+    <div class="titlebar">
+      <span class="name">Easy Grade</span>
+      <span class="path" title="${esc(st.folder)}">${esc(st.rubric ? st.rubric.assignment + " · " : "")}${esc(st.folder)}</span>
+      <span class="right"><span class="pill" title="Files are read and processed on this computer">Runs locally</span><button class="btn" data-act="choose-folder">Change folder…</button></span>
+    </div>
+    <div class="body">
+      <nav class="rail" aria-label="Steps">${stepsInfo().map((x, i) => `<button class="step" data-step="${i}" ${S.step === i ? 'aria-current="step"' : ""} ${x.on ? "" : "disabled"}><span class="n">${i + 1}</span><span class="t">${x.t}</span><span class="s">${esc(x.s)}</span></button>`).join("")}</nav>
+      <main class="work" id="work">${[viewRubric, viewSubmissions, viewGrading, viewReview, viewExport][S.step]()}</main>
+    </div>
+  </div>`;
+}
+
+function rubricTable(r) {
+  return `<div class="tbl-wrap"><table>
+    <thead><tr><th>Criterion</th><th>Graded from</th><th class="r">Points</th><th>Level scores</th></tr></thead>
+    <tbody>${r.criteria.map((c) => `
+      <tr class="crit-row" data-crit="${esc(c.id)}" tabindex="0"><td><b>${esc(c.name)}</b><div class="muted mono" style="font-size:11px">${esc(c.id)}</div></td>
+      <td><span class="chip src-${c.source}">${SRC[c.source]}</span></td><td class="r num">${fmt(c.points)}</td>
+      <td class="muted num">${c.levels.map((l) => fmt(l.score)).join(" / ")}</td></tr>
+      ${S.openCrit === c.id ? `<tr class="levels"><td colspan="4"><div class="lvls">${c.levels.map((l) => `<div class="lvl"><b>${fmt(l.score)}</b> · ${esc(l.label)}<div class="muted" style="font-size:12px;margin-top:4px">${esc(l.description)}</div></div>`).join("")}</div></td></tr>` : ""}`).join("")}
+    </tbody></table></div>`;
+}
+
+function viewRubric() {
+  const r = S.state.rubric;
+  const warn = S.replaceWarn ? `<div class="note warn"><b>This assignment already has scores.</b><p>${esc(S.replaceWarn)}</p><div class="actions"><button class="btn primary" data-act="replace-rubric">Choose a rubric and replace anyway</button><button class="btn" data-act="cancel-replace">Keep the current rubric</button></div></div>` : "";
+  if (!r) {
+    return `<div class="head"><div><h2>1 · Rubric</h2><p class="lede">Choose the rubric for this assignment: a .json file, or an Excel/CSV sheet with one row per level. The app checks it and keeps a copy in <span class="mono">_grading/rubric.json</span>.</p></div></div>
+      ${warn}
+      <div class="actions"><button class="btn primary" data-act="choose-rubric">Choose rubric file…</button><button class="btn" data-act="sample-rubric">Use the sample rubric</button><button class="btn" data-act="template">Save Excel template…</button></div>`;
+  }
+  const by = (k) => r.criteria.filter((c) => c.source === k).reduce((a, c) => a + c.points, 0);
+  return `<div class="head"><div><h2>1 · Rubric</h2><p class="lede">${esc(r.assignment)}. The AI must pick one of these levels for each criterion, and each criterion becomes a column in the export. Click a row to see its levels.</p></div>
+    <div class="actions"><button class="btn" data-act="choose-rubric">Replace rubric…</button><button class="btn" data-act="template">Save Excel template…</button></div></div>
+    ${warn}
+    <div class="stats"><div class="stat"><b>${fmt(r.total_points)}</b><span>points total</span></div><div class="stat"><b>${fmt(by("notebook"))}</b><span>from the notebook</span></div><div class="stat"><b>${fmt(by("video"))}</b><span>from the video</span></div><div class="stat"><b>${fmt(by("both"))}</b><span>video vs. notebook</span></div></div>
+    ${rubricTable(r)}
+    <div class="actions"><button class="btn primary" data-step="1">Next: check submissions</button></div>`;
+}
+
+function viewSubmissions() {
+  const st = S.state;
+  const rows = st.students.map((s) => `<tr><td class="mono num">${esc(s.id)}</td><td>${esc(s.name || "—")}</td>
+      <td>${s.has_notebook ? "✓" : "—"}</td><td>${s.has_video ? "✓" : "—"}</td>
+      <td><span class="chip st-${s.status}">${esc(s.status_label)}</span></td>
+      <td>${s.flags.length ? s.flags.map((f) => `<span class="chip flag" title="${esc(f)}">${esc(f.length > 50 ? f.slice(0, 48) + "…" : f)}</span>`).join(" ") : '<span class="muted">—</span>'}</td></tr>`).join("");
+  return `<div class="head"><div><h2>2 · Submissions</h2><p class="lede">Each student is matched to a notebook and a video. Works with one folder per student or the flat LMS download naming. Anything that needs attention is flagged.</p></div>
+    <div class="actions"><button class="btn" data-act="scan" ${st.rubric ? "" : "disabled"}>Scan folder again</button></div></div>
+    <p class="muted" style="font-size:13px">${st.roster ? `Names and emails come from <span class="mono">${esc(st.roster.split(/[\\/]/).pop())}</span>.` : `No roster found. Put a <span class="mono">roster.csv</span> (student_id, student_name, email) in the folder to get names and emails.`}</p>
+    ${st.students.length ? `<div class="tbl-wrap"><table><thead><tr><th>ID</th><th>Student</th><th>Notebook</th><th>Video</th><th>Status</th><th>Needs attention</th></tr></thead><tbody>${rows}</tbody></table></div>` : `<div class="note">No submissions found in this folder. Open the folder that contains the students' files.</div>`}
+    ${st.rubric ? `<div class="actions"><button class="btn primary" data-step="2">Next: grading</button></div>` : `<div class="note">Choose a rubric to start grading. <button class="btn" data-step="0" style="justify-self:start">Go to Rubric</button></div>`}`;
+}
+
+function viewGrading() {
+  const st = S.state, g = S.grading;
+  const pending = st.students.filter((s) => s.status === "pending" && (s.has_notebook || s.has_video));
+  return `<div class="head"><div><h2>3 · Grading</h2><p class="lede">The AI drafts a score, a reason and evidence for every criterion. Nothing is final until you approve it in Review.</p></div></div>
+    <div class="note warn"><b>AI grading isn't connected yet.</b><p>Until it is, score by hand in Review, or run the simulated grader to try the whole workflow with made-up scores.</p></div>
+    <div class="actions">
+      <button class="btn primary" data-act="simulate" ${g || !pending.length ? "disabled" : ""}>Run simulated grader on ${pending.length} ungraded</button>
+      <button class="btn" data-act="simulate-all" ${g ? "disabled" : ""}>Re-run on everyone</button>
+    </div>
+    ${g ? `<div style="display:grid;gap:6px"><div class="progress"><i style="width:${Math.round((g.done / Math.max(g.total, 1)) * 100)}%"></i></div><span class="muted num">${g.done} of ${g.total}${g.current ? " · " + esc(g.current) : ""}</span></div>` : ""}
+    <div class="tbl-wrap"><table><thead><tr><th>Student</th><th>Status</th><th class="r">Total</th><th>Flags</th></tr></thead><tbody>
+    ${st.students.map((s) => `<tr><td>${esc(s.name || s.id)}</td><td><span class="chip st-${s.status}">${esc(s.status_label)}</span></td><td class="r num">${s.total == null ? "—" : fmt(s.total) + " / " + fmt(st.rubric.total_points)}</td><td class="muted">${s.flags.length || ""}</td></tr>`).join("")}
+    </tbody></table></div>
+    <div class="actions"><button class="btn primary" data-step="3">Next: review</button></div>`;
+}
+
+// ----- Review: three parts that update independently (so the video keeps playing)
+function viewReview() {
+  if (!S.state.students.length) return `<div class="note">No students in this folder.</div>`;
+  return `<div class="head"><div><h2>4 · Review</h2><p class="lede">Check each draft next to its evidence. Click an evidence chip to jump to that cell or video moment. Click a level to change a score; changes are tracked and show in red in the export.</p></div></div>
+    <div class="review"><div class="queue" id="queue" role="listbox" aria-label="Students">${queueHTML()}</div>
+    <div class="panel" id="evidence">${evidenceHTML()}</div>
+    <div class="scorecol" id="scorecol">${scoreHTML()}</div></div>`;
+}
+function queueHTML() {
+  return S.state.students.map((x) => `<button class="qitem" role="option" data-sel="${esc(x.id)}" aria-selected="${x.id === S.sel}"><span class="nm">${esc(x.name || x.id)}</span><span class="tt num">${fmt(x.total)}</span><span class="chip st-${x.status}">${esc(x.status_label)}</span></button>`).join("");
+}
+function notebookHTML(d) {
+  const nb = d.notebook;
+  if (!d.notebook_name) return `<div class="empty">No notebook in this submission.</div>`;
+  if (nb.error) return `<div class="empty">${esc(nb.error)}</div>`;
+  return nb.cells.map((c) => {
+    const outs = c.outputs.map((o) => o.kind === "image" ? `<img alt="Cell ${c.n} output" src="${esc(o.src)}">` : `<div class="out${o.kind === "error" ? " err" : ""}">${esc(o.text)}</div>`).join("");
+    const body = c.type === "markdown" ? `<div class="md">${esc(c.source)}</div>` : `<pre>${esc(c.source)}</pre>${outs}`;
+    return `<div class="cell${S.hlCell === c.n ? " hl" : ""}" id="cell-${c.n}"><div class="in">#${c.n}${c.type === "code" ? `<br>[${c.count ?? " "}]` : ""}</div><div style="min-width:0">${body}</div></div>`;
+  }).join("");
+}
+function videoHTML(d) {
+  if (!d.video_url) return `<div class="empty">${d.video_name ? "The video file can't be opened." : "No video in this submission."}${d.flags.some((f) => /link/i.test(f)) ? "<br>The student sent a link. Download the video into their folder, then scan again." : ""}</div>`;
+  return `<video id="vid" controls preload="metadata" src="${esc(d.video_url)}"></video>
+    <p class="muted" style="font-size:12px">${esc(d.video_name)}. The transcript will show here once video grading is connected.</p>`;
+}
+function evidenceHTML() {
+  const d = S.student;
+  if (!d) return `<div class="empty">Choose a student.</div>`;
+  const fname = S.evTab === "notebook" ? d.notebook_name : d.video_name;
+  return `<div class="tabs" role="tablist"><button class="tab" role="tab" data-tab="notebook" aria-selected="${S.evTab === "notebook"}">Notebook</button><button class="tab" role="tab" data-tab="video" aria-selected="${S.evTab === "video"}">Video</button><span class="file" title="${esc(fname || "")}">${esc(fname || "")}</span></div>
+    <div class="panel-body" id="evbody">${S.evTab === "notebook" ? notebookHTML(d) : videoHTML(d)}</div>`;
+}
+function scoreHTML() {
+  const d = S.student;
+  if (!d) return "";
+  const missing = d.criteria.filter((c) => c.final == null).length;
+  const nothing = !d.notebook_name && !d.video_name;
+  return `<div class="scorecard">
+    ${d.flags.map((f) => `<div class="flagline">${esc(f)}</div>`).join("")}
+    ${nothing ? `<div class="note">Nothing was submitted. Score it by hand (e.g. all zeros) to include it in the export.</div>` : ""}
+    ${d.criteria.map((c) => {
+      const low = c.confidence != null && c.confidence < 0.7;
+      return `<div class="crit${low ? " low" : ""}">
+        <div class="crit-top"><h3>${esc(c.name)}</h3><span class="chip src-${c.source}">${SRC[c.source]}</span></div>
+        <div class="seg" role="group" aria-label="Score for ${esc(c.name)}">${c.levels.map((l) => `<button data-score="${esc(c.id)}|${l[0]}" aria-pressed="${c.final === l[0]}" title="${esc(l[1] + ": " + l[2])}">${fmt(l[0])}${l[0] === c.ai_score ? '<span class="ai">AI</span>' : ""}</button>`).join("")}<span class="muted mono" style="font-size:12px">/ ${fmt(c.points)}</span></div>
+        ${c.reason ? `<p style="font-size:13px">${esc(c.reason)}</p>` : c.final == null ? `<p class="muted" style="font-size:13px">Not scored yet.</p>` : ""}
+        <div class="meta">${c.evidence.map((e) => `<button class="chip ev" data-ev="${esc(e)}">${esc(e)}</button>`).join("")}${c.confidence != null ? `<span>${Math.round(c.confidence * 100)}% sure</span>` : ""}${low ? '<span class="chip st-graded">check this</span>' : ""}${c.changed ? `<span class="changed">changed from ${fmt(c.ai_score)}</span>` : ""}</div>
+        ${c.final != null && (c.changed || c.comment) ? `<textarea rows="2" data-cmt="${esc(c.id)}" placeholder="Why you changed it (goes in the student's feedback)">${esc(c.comment)}</textarea>` : ""}
+      </div>`;
+    }).join("")}
+    <div><h3 style="margin-bottom:4px">Feedback to student</h3><textarea rows="3" data-fb="1">${esc(d.feedback)}</textarea></div>
+    <div class="totalbar"><div><b>${fmt(d.total)} / ${fmt(d.points)}</b> ${missing ? `<span class="muted">${missing} left to score</span>` : `<span class="muted">${Math.round((d.total / d.points) * 100)}%</span>`}</div>
+      ${d.status === "approved" ? `<span class="chip st-approved">Approved</span><button class="btn" data-act="reopen">Reopen</button>` : `<button class="btn primary" data-act="approve" ${missing ? "disabled" : ""}>Approve and go to next</button>`}</div>
+  </div>`;
+}
+function renderReviewParts(parts) {
+  if (S.step !== 3 || !$("#queue")) return render();
+  if (parts.includes("queue")) $("#queue").innerHTML = queueHTML();
+  if (parts.includes("evidence")) $("#evidence").innerHTML = evidenceHTML();
+  if (parts.includes("score")) $("#scorecol").innerHTML = scoreHTML();
+  const rail = document.querySelector(".rail");
+  if (rail) rail.querySelectorAll(".step .s").forEach((el, i) => (el.textContent = stepsInfo()[i].s));
+}
+
+function viewExport() {
+  const st = S.state, r = st.rubric, c = st.counts;
+  const head = `<tr><th>ID</th><th>Name</th><th>Status</th>${r.criteria.map((x) => `<th class="r" title="${esc(x.name)}">${esc(x.name.split(" ")[0])} (${fmt(x.points)})</th>`).join("")}<th class="r">Total</th></tr>`;
+  const rows = st.students.map((s) => `<tr class="${s.status !== "approved" ? "unapproved" : ""}"><td class="mono num">${esc(s.id)}</td><td style="white-space:nowrap">${esc(s.name)}</td><td style="white-space:nowrap">${esc(s.status_label)}</td>${r.criteria.map((x) => { const v = s.scores[x.id]; return `<td class="r num ${v && v.changed ? "chg" : ""}">${v && v.final != null ? fmt(v.final) : ""}</td>`; }).join("")}<td class="r num"><b>${s.total == null ? "" : fmt(s.total)}</b></td></tr>`).join("");
+  const res = S.exportResult;
+  return `<div class="head"><div><h2>5 · Export</h2><p class="lede">Writes everything to <span class="mono">_grading/</span>: grades.xlsx (summary, detail, feedback, flags, rubric), gradebook.csv, and one feedback file per student. Put the LMS gradebook export in that folder as <span class="mono">lms_gradebook.csv</span> to also get a file ready to import back.</p></div></div>
+    <div class="stats"><div class="stat"><b>${c.approved}</b><span>approved</span></div><div class="stat"><b>${c.graded}</b><span>need review</span></div><div class="stat"><b>${c.pending}</b><span>not graded</span></div></div>
+    <div class="actions"><label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="incl" ${S.includeUnapproved ? "checked" : ""}> Include grades that aren't approved in gradebook.csv</label></div>
+    <div class="actions"><button class="btn primary" data-act="export">Export all</button>${res ? `<button class="btn" data-act="show">${isMac ? "Show in Finder" : "Open folder"}</button>` : ""}</div>
+    ${res ? `<div class="note"><b>Exported</b><div class="result">${res.lines.map(esc).join("\n")}</div></div>` : ""}
+    <div class="tbl-wrap" style="max-height:420px">${"<table><thead>" + head + "</thead><tbody>" + rows + "</tbody></table>"}</div>
+    <p class="muted" style="font-size:12px">Yellow rows aren't approved. Red numbers were changed by you.</p>`;
+}
+
+function render() {
+  const root = $("#root");
+  if (!S.state) { root.className = "welcome"; root.innerHTML = `<p class="muted">Starting…</p>`; return; }
+  if (!S.state.folder) { root.className = "welcome"; root.innerHTML = viewWelcome(); return; }
+  root.className = "";
+  root.style.height = "100%";
+  const work = $("#work"), y = work ? work.scrollTop : 0;
+  const eb = $("#evbody"), ey = eb ? eb.scrollTop : 0;
+  root.innerHTML = viewShell();
+  if ($("#work")) $("#work").scrollTop = y;
+  if ($("#evbody")) $("#evbody").scrollTop = ey;
+}
+
+// ---------------------------------------------------------------------------
+// Actions
+// ---------------------------------------------------------------------------
+async function goStep(i) {
+  S.step = i;
+  if (i === 3) {
+    const sts = S.state.students;
+    if (!S.sel || !sts.some((s) => s.id === S.sel)) {
+      const first = sts.find((s) => s.status === "graded") || sts[0];
+      S.sel = first ? first.id : null;
+    }
+    if (S.sel) await loadStudent(S.sel);
+  }
+  render();
+}
+
+async function runSimulated(all) {
+  const list = S.state.students.filter((s) => (s.has_notebook || s.has_video) && (all || s.status === "pending"));
+  S.grading = { done: 0, total: list.length, current: "" };
+  render();
+  for (const s of list) {
+    S.grading.current = s.name || s.id;
+    render();
+    await call("grade_simulated", s.id);
+    S.grading.done++;
+  }
+  S.grading = null;
+  await refresh();
+  toast(`Drafted ${list.length} students. ${S.state.counts.graded} are waiting for review.`);
+}
+
+async function afterScoreChange() {
+  await loadStudent(S.sel);
+  const st = await call("get_state");
+  if (ok(st)) S.state = st;
+  renderReviewParts(["queue", "score"]);
+}
+
+function seekVideo(sec) {
+  const v = $("#vid");
+  if (!v) return;
+  const go = () => { v.currentTime = sec; };
+  if (v.readyState >= 1) go(); else v.addEventListener("loadedmetadata", go, { once: true });
+}
+
+async function onAct(act) {
+  if (act === "choose-folder") {
+    const st = await call("choose_folder");
+    if (ok(st)) { S.state = st; S.sel = null; S.student = null; S.exportResult = null; S.step = st.rubric ? 3 : 0; if (S.step === 3) return goStep(3); render(); }
+  } else if (act === "choose-rubric" || act === "replace-rubric") {
+    const st = await call("choose_rubric", act === "replace-rubric");
+    if (st && st.failed && /already has scores/.test(st.error)) { S.replaceWarn = st.error; render(); return; }
+    if (ok(st)) { S.state = st; S.replaceWarn = null; render(); toast("Rubric saved."); }
+  } else if (act === "cancel-replace") {
+    S.replaceWarn = null; render();
+  } else if (act === "sample-rubric") {
+    const st = await call("use_sample_rubric");
+    if (ok(st)) { S.state = st; render(); toast("Sample rubric loaded."); }
+  } else if (act === "template") {
+    const r = await call("save_rubric_template");
+    if (ok(r)) toast("Template saved: " + r.path);
+  } else if (act === "scan") {
+    const st = await call("scan");
+    if (ok(st)) { S.state = st; render(); toast(`Found ${st.students.length} students.`); }
+  } else if (act === "simulate" || act === "simulate-all") {
+    await runSimulated(act === "simulate-all");
+  } else if (act === "approve") {
+    const cur = S.sel;
+    if (!ok(await call("approve", cur))) return;
+    const st = await call("get_state");
+    if (ok(st)) S.state = st;
+    const next = S.state.students.find((s) => s.status === "graded" && s.id !== cur);
+    toast(next ? `Approved. Next: ${next.name || next.id}.` : "Approved. Nothing left to review.");
+    S.hlCell = null;
+    await loadStudent(next ? next.id : cur);
+    renderReviewParts(["queue", "evidence", "score"]);
+  } else if (act === "reopen") {
+    if (ok(await call("reopen", S.sel))) await afterScoreChange();
+  } else if (act === "export") {
+    const r = await call("export_all", S.includeUnapproved);
+    if (ok(r)) { S.exportResult = r; render(); toast("Export finished."); }
+  } else if (act === "show") {
+    await call("show_exports");
+  }
+}
+
+document.addEventListener("click", async (e) => {
+  const b = e.target.closest("button,[data-crit]");
+  if (!b || b.disabled) return;
+  const d = b.dataset;
+  if (d.step != null) return goStep(+d.step);
+  if (d.crit) { S.openCrit = S.openCrit === d.crit ? null : d.crit; return render(); }
+  if (d.sel) { S.hlCell = null; await loadStudent(d.sel); return renderReviewParts(["queue", "evidence", "score"]); }
+  if (d.tab) { S.evTab = d.tab; return renderReviewParts(["evidence"]); }
+  if (d.score) {
+    const i = d.score.lastIndexOf("|");
+    if (ok(await call("set_score", S.sel, d.score.slice(0, i), Number(d.score.slice(i + 1))))) await afterScoreChange();
+    return;
+  }
+  if (d.ev) {
+    const m = d.ev.match(/^cell (\d+)/i), v = d.ev.match(/^video (\d+):(\d+)(?::(\d+))?/i);
+    if (m) {
+      S.evTab = "notebook"; S.hlCell = +m[1]; renderReviewParts(["evidence"]);
+      const el = $("#cell-" + m[1]), body = $("#evbody");
+      if (el && body) body.scrollTop += el.getBoundingClientRect().top - body.getBoundingClientRect().top - 12;
+    } else if (v) {
+      const sec = v[3] != null ? +v[1] * 3600 + +v[2] * 60 + +v[3] : +v[1] * 60 + +v[2];
+      if (S.evTab !== "video") { S.evTab = "video"; renderReviewParts(["evidence"]); }
+      seekVideo(sec);
+    }
+    return;
+  }
+  if (d.act) return onAct(d.act);
+});
+document.addEventListener("keydown", (e) => {
+  const r = e.target.closest && e.target.closest("[data-crit]");
+  if (r && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); r.click(); }
+});
+// Text fields save when you leave them.
+document.addEventListener("change", async (e) => {
+  const t = e.target;
+  if (t.id === "incl") { S.includeUnapproved = t.checked; return; }
+  if (t.dataset.cmt) { if (ok(await call("set_comment", S.sel, t.dataset.cmt, t.value))) toast("Comment saved."); return; }
+  if (t.dataset.fb) { if (ok(await call("set_feedback", S.sel, t.value))) toast("Feedback saved."); return; }
+});
+
+// ---------------------------------------------------------------------------
+// Start: wait for the Python bridge. Open with ?mock in a browser to work on
+// the UI without Python (loads dev_mock.js).
+// ---------------------------------------------------------------------------
+let started = false;
+async function start() {
+  if (started) return;
+  started = true;
+  await refresh();
+  if (S.state && S.state.rubric) await goStep(S.state.counts.graded ? 3 : 2);
+}
+window.addEventListener("pywebviewready", start);
+if (window.pywebview && window.pywebview.api && window.pywebview.api.get_state) start();
+setTimeout(() => {
+  if (started) return;
+  if (/mock/.test(location.search + location.hash)) {
+    const s = document.createElement("script");
+    s.src = "dev_mock.js";
+    s.onload = start;
+    document.body.appendChild(s);
+  } else {
+    $("#root").innerHTML = `<div class="card" style="max-width:520px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:24px;display:grid;gap:8px"><h2>Start the app with Python</h2><p class="muted">This page is the app's screen. Run <span class="mono">python app.py</span> to open it, or add <span class="mono">?mock</span> to the address to try it with fake data.</p></div>`;
+  }
+}, 1500);
+})();
+</script>
+</body>
+</html>

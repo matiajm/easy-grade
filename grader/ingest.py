@@ -118,7 +118,8 @@ def scan_submissions(folder: str | Path, roster: dict[str, dict] | None = None) 
     found: dict[str, FoundSubmission] = {}
 
     for entry in sorted(folder.iterdir()):
-        if entry.name.startswith("."):
+        # Skip hidden files and the app's own output folder (_grading).
+        if entry.name.startswith((".", "_")):
             continue
         if entry.is_dir():
             sub = found.setdefault(entry.name, FoundSubmission(student_id=entry.name))

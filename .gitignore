@@ -10,3 +10,8 @@ easygrade/bundles/
 *.webm
 .env*
 !.env.example
+_grading/
+sample_data/
+build/
+dist/
+*.spec

@@ -155,10 +155,35 @@ def _fake_notebook(ran: bool = True) -> str:
     })
 
 
+SAMPLES = Path(__file__).resolve().parent.parent / "samples"
+
+
+def _sample_notebook(ran: bool = True) -> str:
+    """The sample notebook from samples/ (real outputs and charts), or a tiny stand-in."""
+    path = SAMPLES / "sample_project.ipynb"
+    if not path.is_file():
+        return _fake_notebook(ran)
+    nb = json.loads(path.read_text(encoding="utf-8"))
+    if not ran:
+        for c in nb["cells"]:
+            if c.get("cell_type") == "code":
+                c["outputs"], c["execution_count"] = [], None
+    return json.dumps(nb, indent=1)
+
+
+def _write_video(path: Path) -> None:
+    sample = SAMPLES / "sample_walkthrough.mp4"
+    path.write_bytes(sample.read_bytes() if sample.is_file() else b"\x00" * 2048)
+
+
 def build_demo_submissions(root: Path) -> Path:
     """Fake submissions folder mixing both layouts and common problems."""
+    import shutil
+
     sub = root / "submissions"
-    sub.mkdir(parents=True, exist_ok=True)
+    if sub.exists():
+        shutil.rmtree(sub)  # start clean, including any _grading/ from the app
+    sub.mkdir(parents=True)
     for i, (sid, name, _) in enumerate(DEMO_STUDENTS):
         slug = name.lower().replace(" ", "")
         if sid == "1010":
@@ -166,19 +191,19 @@ def build_demo_submissions(root: Path) -> Path:
         if i % 2 == 0:  # per-student folder layout
             d = sub / sid
             d.mkdir(exist_ok=True)
-            (d / "project2.ipynb").write_text(_fake_notebook(ran=sid != "1005"), encoding="utf-8")
+            (d / "project2.ipynb").write_text(_sample_notebook(ran=sid != "1005"), encoding="utf-8")
             if sid == "1003":
                 (d / "video_link.txt").write_text("https://drive.google.com/file/d/EXAMPLE/view", encoding="utf-8")
             else:
-                (d / "walkthrough.mp4").write_bytes(b"\x00" * 2048)
+                _write_video(d / "walkthrough.mp4")
         else:  # flat LMS bulk-download layout
             late = "late_" if sid == "1004" else ""
-            (sub / f"{slug}_{late}{sid}_88{sid}_Project2.ipynb").write_text(_fake_notebook(), encoding="utf-8")
+            (sub / f"{slug}_{late}{sid}_88{sid}_Project2.ipynb").write_text(_sample_notebook(), encoding="utf-8")
             if sid != "1008":
-                (sub / f"{slug}_{late}{sid}_88{sid}_walkthrough.mp4").write_bytes(b"\x00" * 4096)
-    roster = root / "roster.csv"
-    roster.write_text("student_id,student_name,email\n" + "\n".join(f"{s},{n},{e}" for s, n, e in DEMO_STUDENTS) + "\n",
-                      encoding="utf-8")
+                _write_video(sub / f"{slug}_{late}{sid}_88{sid}_walkthrough.mp4")
+    roster_text = "student_id,student_name,email\n" + "\n".join(f"{s},{n},{e}" for s, n, e in DEMO_STUDENTS) + "\n"
+    (root / "roster.csv").write_text(roster_text, encoding="utf-8")
+    (sub / "roster.csv").write_text(roster_text, encoding="utf-8")  # the desktop app looks for it here
     # A fake LMS gradebook export to show filling the assignment column in place.
     lms = root / "lms_gradebook_export.csv"
     lines = ["Student,ID,SIS User ID,Section,Project 1 (4410),Project 2 - Housing Price Regression (4411)",
@@ -186,6 +211,12 @@ def build_demo_submissions(root: Path) -> Path:
     lines += [f"\"{n}\",{30000 + int(s)},{s},DATA-2100,{80 + int(s) % 15}," for s, n, _ in DEMO_STUDENTS]
     lms.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return sub
+
+
+def cmd_sample_folder(a):
+    sub = build_demo_submissions(Path(a.folder))
+    print(f"Sample submissions written to {sub}")
+    print(f"Open it in the app:  python app.py --folder \"{sub}\"")
 
 
 def cmd_demo(a):
@@ -230,7 +261,7 @@ def cmd_demo(a):
         st.override_score(hannah.id, rubric, "code_quality", 3,
                           "Notebook was saved without outputs, so it was never run top to bottom.")
         marcus = st.submission(aid, "1002")
-        st.override_score(marcus.id, rubric, "modeling", 20, "Residual plot in cell 18 covers this; full marks.")
+        st.override_score(marcus.id, rubric, "modeling", 20, "Residual plot in cell 8 covers this; full marks.")
         st.set_feedback(marcus.id, "Strong project, Marcus. Your residual analysis was the best in the class.")
         hold = {"1005", "1008"}
         for s in st.submissions(aid, status="graded"):
@@ -303,6 +334,10 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--include-unapproved", action="store_true", help="Put unapproved grades in the CSV too")
     s.add_argument("--feedback-dir", help="Folder for one feedback .txt per student")
     s.set_defaults(fn=cmd_export)
+
+    s = sp.add_parser("sample-folder", help="Create a fake submissions folder to try the desktop app")
+    s.add_argument("folder", nargs="?", default="sample_data")
+    s.set_defaults(fn=cmd_sample_folder)
 
     s = sp.add_parser("demo", help="Run the whole loop on fake data")
     s.add_argument("folder", nargs="?", default="demo_output")

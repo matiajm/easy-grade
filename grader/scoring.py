@@ -173,12 +173,13 @@ class SimulatedGrader:
                 continue
             idx = min(len(c.levels) - 1, max(0, skill + rng.choice([-1, 0, 0, 0, 1])))
             lvl = c.levels[idx]
+            # Evidence fits the sample notebook (9 cells) and sample video (45 s).
             if c.source == "video":
-                ev = [f"video {rng.randint(0, 9):02d}:{rng.randint(0, 59):02d}"]
+                ev = [f"video 00:{rng.randint(0, 44):02d}"]
             elif c.source == "both":
-                ev = [f"cell {rng.randint(2, 30)}", f"video {rng.randint(0, 9):02d}:{rng.randint(0, 59):02d}"]
+                ev = [f"cell {rng.randint(2, 8)}", f"video 00:{rng.randint(0, 44):02d}"]
             else:
-                ev = [f"cell {rng.randint(2, 30)}"]
+                ev = [f"cell {rng.randint(2, 8)}"]
             crit[c.id] = {
                 "score": lvl.score,
                 "reason": _REASONS.get(idx, _REASONS[3]),
