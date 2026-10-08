@@ -4,6 +4,20 @@ A first-pass grader for CAP3321C team finals (Jupyter notebook plus recorded pre
 
 Rules and details: [CLAUDE.md](CLAUDE.md).
 
+## Status: reference prototype, not the team pipeline
+
+Built for the 2026-10-08 demo to show the whole loop working end to end on synthetic data. It does **not** use the bundle contract in `TEAM PLAN UPDATED.md` yet, and it does not replace anyone's part. Pieces the owners may want to reuse:
+
+| Prototype file | Team plan part (owner) |
+|---|---|
+| `scripts/transcribe.py` (local faster-whisper, low-confidence segments) | 1. Ingest and Whisper (Lucas) |
+| `scripts/extract_notebook.py` (cells, chart images, header, file name, execution order, name replacement) | 2. Notebook parser (Matias) |
+| `.claude/skills/grade-finals/SKILL.md`, grading rules in `CLAUDE.md` | 3. Grader (Diego) |
+| `scripts/build_csv.py` (range checks, total, export lock), `scripts/review.py` (review time log) | 4. Review and export (Valery) |
+| `samples/` (3 fake finals, answer key), `scripts/evaluate.py` (agreement, consistency) | 5. Test data (Jorge) |
+
+Example output from the demo run (two blind grading runs) is in `samples/example_run/`: all 18 category levels within one level of the answer key, 3 of 3 AI-usage flags right, 16 of 18 levels the same across the two runs. Known gap: names misheard by the speech model are not replaced.
+
 ## Setup (once)
 
 ```bash
