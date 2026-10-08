@@ -50,15 +50,20 @@ def _comments(review: dict) -> str:
     return " | ".join(parts)
 
 
+def _grade(total: Any) -> Any:
+    """83.0 -> 83, 83.5 stays 83.5."""
+    return f"{total:g}" if isinstance(total, float) else total
+
+
 def rows_for(review: dict, columns: str) -> list[list[str]]:
     """One row per student; every member gets the same grade (decision D-003)."""
     rows = []
     for student in review["students"]:
         if columns == "prd":
-            values = [student["name"], review.get("notebook_name", ""), review["total"], review.get("grade_reason", ""),
+            values = [student["name"], review.get("notebook_name", ""), _grade(review["total"]), review.get("grade_reason", ""),
                       _flags_text(review), _comments(review), _ai_text(review), review["status"]]
         else:
-            values = [student["name"], review["total"], _flags_text(review), _ai_text(review)]
+            values = [student["name"], _grade(review["total"]), _flags_text(review), _ai_text(review)]
         rows.append([safe_cell(v) for v in values])
     return rows
 

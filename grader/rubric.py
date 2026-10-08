@@ -34,9 +34,16 @@ class RubricError(ValueError):
 
 @dataclass(frozen=True)
 class Level:
-    score: float
+    score: float  # what the AI gives when it picks this level
     label: str
     description: str = ""
+    # Lowest score that still counts as this level. Optional: rubrics written as ranges (36-40, 28-35, ...)
+    # set it so a hand-typed score maps to the right level; without it the level starts at its own score.
+    min: float | None = None
+
+    @property
+    def floor(self) -> float:
+        return self.score if self.min is None else self.min
 
 
 @dataclass(frozen=True)
@@ -53,6 +60,15 @@ class Criterion:
             if lvl.score == score:
                 return lvl
         return None
+
+    def label_for(self, score: float | None) -> Level | None:
+        """The level a score falls in (levels run best to worst; the lowest level catches everything below)."""
+        if score is None:
+            return None
+        for lvl in self.levels:
+            if score >= lvl.floor:
+                return lvl
+        return self.levels[-1] if self.levels else None
 
 
 @dataclass(frozen=True)
@@ -108,6 +124,8 @@ class Rubric:
             for l in c.levels:
                 if l.score < 0 or l.score > c.points:
                     problems.append(f"{where}: level '{l.label}' score {l.score:g} is outside 0–{c.points:g}.")
+                if l.min is not None and not 0 <= l.min <= l.score:
+                    problems.append(f"{where}: level '{l.label}' starts at {l.min:g}, which must be between 0 and its score {l.score:g}.")
         if problems:
             raise RubricError(problems)
         return self
@@ -126,7 +144,8 @@ class Rubric:
                     levels=tuple(
                         sorted(
                             (
-                                Level(float(l["score"]), str(l["label"]), str(l.get("description", "")))
+                                Level(float(l["score"]), str(l["label"]), str(l.get("description", "")),
+                                      float(l["min"]) if l.get("min") is not None else None)
                                 for l in c.get("levels", [])
                             ),
                             key=lambda l: -l.score,
@@ -158,7 +177,8 @@ class Rubric:
                     "points": c.points,
                     "description": c.description,
                     "levels": [
-                        {"score": l.score, "label": l.label, "description": l.description} for l in c.levels
+                        {"score": l.score, "label": l.label, "description": l.description,
+                         **({"min": l.min} if l.min is not None else {})} for l in c.levels
                     ],
                 }
                 for c in self.criteria

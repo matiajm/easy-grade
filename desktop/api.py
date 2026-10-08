@@ -32,6 +32,7 @@ from grader.store import GradeStore, StoreError
 from . import settings as cfgstore
 from .media import MediaServer
 from .notebook import read_notebook
+from .review import ReviewMixin
 
 GRADING_DIR = "_grading"
 SAMPLE_RUBRIC = Path(__file__).resolve().parent.parent / "rubrics" / "project2_regression.json"
@@ -55,7 +56,7 @@ def _safe(fn):
     return wrapper
 
 
-class Api:
+class Api(ReviewMixin):
     def __init__(self, media: MediaServer | None = None):
         self._window = None
         self._folder: Path | None = None
@@ -174,6 +175,7 @@ class Api:
     def _scan(self) -> int:
         roster_file = self._roster_path()
         found = scan_submissions(self._folder, load_roster(roster_file) if roster_file else None)
+        self._apply_matching(found)  # files the professor assigned by hand, and 'no video for this team'
         with self._store() as st:
             aid, _ = st.get_assignment(self._rubric.assignment)
             for s in found:
@@ -322,7 +324,10 @@ class Api:
             if not s.notebook_path and not s.video_path:
                 return {"ok": True, "skipped": True, "reason": "Nothing submitted"}
             raw = SimulatedGrader().grade(rubric, s.student_id, has_video=bool(s.video_path))
-            results, feedback, flags = parse_grader_output(rubric, raw)
+            # Never invent a score that could not be graded: without a video the professor enters those.
+            only = [c.id for c in rubric.criteria if s.video_path or c.source not in ("video", "both")]
+            raw["criteria"] = {k: v for k, v in raw.get("criteria", {}).items() if k in only}
+            results, feedback, flags = parse_grader_output(rubric, raw, only=only)
             st.record_ai_results(s.id, rubric, results, feedback)
             for f in flags:
                 st.add_flag(s.id, f)
@@ -411,3 +416,10 @@ class Api:
         else:
             subprocess.Popen(["xdg-open", path])
         return {"ok": True}
+
+
+# The dashboard's methods live in ReviewMixin; give them the same error handling as the rest of the API.
+for _name in ("list_rubrics", "preview_rubric", "preview_builtin_rubric", "use_builtin_rubric",
+              "choose_rubric_preview", "create_sample_folder", "get_matches", "assign_file", "set_no_video",
+              "analyze_notebook", "get_review", "export_review"):
+    setattr(Api, _name, _safe(getattr(Api, _name)))

@@ -1,0 +1,169 @@
+{
+  "assignment": "CAP3321C Final Project",
+  "version": 1,
+  "notes": "200 points, six categories. Each level covers a range of points (the 'min' field). The AI proposes one score per level (Excellent = the maximum, the others the middle of the range) and the professor can type any score inside 0 to the maximum. Transcribed from the CAP3321C Final Project rubric.",
+  "criteria": [
+    {
+      "id": "data_cleaning",
+      "name": "Data Cleaning & Preparation",
+      "source": "notebook",
+      "points": 40,
+      "description": "Notebook code, outputs and Markdown explanations",
+      "levels": [
+        {
+          "score": 40,
+          "min": 36,
+          "label": "Excellent",
+          "description": "36-40 points. All relevant cleaning steps are performed and clearly justified. Missing values, data types, and inconsistencies are handled appropriately. Cleaning rationale is thoroughly explained in Markdown cells. Code runs without errors."
+        },
+        {
+          "score": 32,
+          "min": 28,
+          "label": "Good",
+          "description": "28-35 points. Most cleaning steps are performed correctly. Minor issues remain (e.g., one data type unconverted, incomplete explanation of a cleaning decision). Code runs with minimal warnings."
+        },
+        {
+          "score": 14,
+          "min": 0,
+          "label": "Needs work",
+          "description": "0-27 points. Significant data quality issues are left unaddressed. Little or no explanation of cleaning decisions. Code contains errors that affect downstream analysis."
+        }
+      ]
+    },
+    {
+      "id": "analysis_viz",
+      "name": "Analysis & Visualizations",
+      "source": "notebook",
+      "points": 50,
+      "description": "Notebook code, tables and the chart images saved in the notebook, checked against the assigned questions",
+      "levels": [
+        {
+          "score": 50,
+          "min": 45,
+          "label": "Excellent",
+          "description": "45-50 points. All questions from the assigned section are answered with appropriate tables or plots. Visualizations are well-chosen for the data, clearly labeled (titles, axes, legends), and easy to interpret. Analysis demonstrates strong command of course skills."
+        },
+        {
+          "score": 40,
+          "min": 35,
+          "label": "Good",
+          "description": "35-44 points. Most questions are answered correctly. Visualizations are generally appropriate but may have minor labeling issues or a less-than-optimal chart type choice. Analysis is mostly sound."
+        },
+        {
+          "score": 17,
+          "min": 0,
+          "label": "Needs work",
+          "description": "0-34 points. Several questions are unanswered or answered incorrectly. Visualizations are missing, mislabeled, or inappropriate for the data. Analysis shows limited application of course skills."
+        }
+      ]
+    },
+    {
+      "id": "interpretation",
+      "name": "Interpretation & Written Summaries",
+      "source": "notebook",
+      "points": 30,
+      "description": "Markdown cells next to each result",
+      "levels": [
+        {
+          "score": 30,
+          "min": 27,
+          "label": "Excellent",
+          "description": "27-30 points. Every question includes a clear, thoughtful written summary that demonstrates understanding of what the results mean. Observations go beyond restating numbers and provide insight and context."
+        },
+        {
+          "score": 24,
+          "min": 21,
+          "label": "Good",
+          "description": "21-26 points. Most questions include written summaries. Interpretations are generally correct but may be surface-level or simply restate the output without deeper insight."
+        },
+        {
+          "score": 10,
+          "min": 0,
+          "label": "Needs work",
+          "description": "0-20 points. Written summaries are missing for most questions or are too vague to demonstrate understanding. Little evidence that the student interpreted the results."
+        }
+      ]
+    },
+    {
+      "id": "code_quality",
+      "name": "Code Quality & Organization",
+      "source": "notebook",
+      "points": 25,
+      "description": "Notebook structure, headings, comments, variable names, error outputs and cell execution order",
+      "levels": [
+        {
+          "score": 25,
+          "min": 23,
+          "label": "Excellent",
+          "description": "23-25 points. Notebook is well-organized with clear Markdown headings and logical flow. Code is clean, commented where needed, uses meaningful variable names, and runs top-to-bottom without errors. No leftover or unnecessary code."
+        },
+        {
+          "score": 20,
+          "min": 17,
+          "label": "Good",
+          "description": "17-22 points. Notebook is mostly organized. Code runs but may have minor issues: inconsistent formatting, sparse comments, or a few unused cells. Overall structure is followable."
+        },
+        {
+          "score": 8,
+          "min": 0,
+          "label": "Needs work",
+          "description": "0-16 points. Notebook is disorganized or difficult to follow. Code does not run cleanly, has significant errors, or lacks structure. Headings and Markdown cells are missing or misused."
+        }
+      ]
+    },
+    {
+      "id": "presentation",
+      "name": "Presentation of Findings",
+      "source": "video",
+      "points": 35,
+      "description": "The transcript, plus the recording length for the time limit",
+      "levels": [
+        {
+          "score": 35,
+          "min": 32,
+          "label": "Excellent",
+          "description": "32-35 points. Presentation is clear, well-organized, and stays within the time limit. Both partners participate in the delivery. Key findings are communicated effectively with references to visualizations. Presenters demonstrate strong understanding of their analysis."
+        },
+        {
+          "score": 28,
+          "min": 24,
+          "label": "Good",
+          "description": "24-31 points. Presentation covers the main findings and both partners participate, though delivery may be uneven. Some findings could be explained more clearly. Stays roughly within the time limit."
+        },
+        {
+          "score": 12,
+          "min": 0,
+          "label": "Needs work",
+          "description": "0-23 points. Presentation is disorganized, significantly over or under time, or only one partner presents. Key findings are unclear or not supported by the analysis. Limited evidence of understanding."
+        }
+      ]
+    },
+    {
+      "id": "collaboration",
+      "name": "Collaboration & Formatting",
+      "source": "notebook",
+      "points": 20,
+      "description": "Notebook header and file name (checked by code) and who did what. Whether both partners presented is judged from the video, which is not connected yet.",
+      "levels": [
+        {
+          "score": 20,
+          "min": 18,
+          "label": "Excellent",
+          "description": "18-20 points. All submission guidelines are followed: header is complete, file is named correctly, partner and section responsibilities are clearly identified. Both partners contributed meaningfully."
+        },
+        {
+          "score": 16,
+          "min": 14,
+          "label": "Good",
+          "description": "14-17 points. Most guidelines are followed. Minor issues such as an incomplete header field or slightly incorrect filename. Both partners appear to have contributed."
+        },
+        {
+          "score": 6,
+          "min": 0,
+          "label": "Needs work",
+          "description": "0-13 points. Multiple submission guidelines are not followed. Header is incomplete or missing. Filename does not follow the convention. Unclear whether both partners contributed."
+        }
+      ]
+    }
+  ]
+}
