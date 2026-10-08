@@ -1,0 +1,21 @@
+Project 2 - Housing Price Regression
+Marcus Bell (1002)
+
+Data Cleaning: 15 / 15
+    Meets every point in the top-level description.
+Exploratory Analysis: 15 / 15
+    Meets every point in the top-level description.
+Model & Evaluation: 20 / 20
+    Residual plot in cell 18 covers this; full marks.
+Code Runs & Readability: 10 / 10
+    Meets every point in the top-level description.
+Explains Reasoning: 20 / 20
+    Meets every point in the top-level description.
+Walkthrough Clarity: 7 / 10
+    Solid work; a few points from the top level are missing or thin.
+Video Matches Notebook: 10 / 10
+    Meets every point in the top-level description.
+
+Total: 97 / 100
+
+Strong project, Marcus. Your residual analysis was the best in the class.

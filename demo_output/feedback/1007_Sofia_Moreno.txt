@@ -1,0 +1,21 @@
+Project 2 - Housing Price Regression
+Sofia Moreno (1007)
+
+Data Cleaning: 15 / 15
+    Meets every point in the top-level description.
+Exploratory Analysis: 15 / 15
+    Meets every point in the top-level description.
+Model & Evaluation: 15 / 20
+    Solid work; a few points from the top level are missing or thin.
+Code Runs & Readability: 10 / 10
+    Meets every point in the top-level description.
+Explains Reasoning: 20 / 20
+    Meets every point in the top-level description.
+Walkthrough Clarity: 10 / 10
+    Meets every point in the top-level description.
+Video Matches Notebook: 10 / 10
+    Meets every point in the top-level description.
+
+Total: 95 / 100
+
+Good structure overall. See the per-criterion notes for where to push further.

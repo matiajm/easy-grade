@@ -1,0 +1,21 @@
+Project 2 - Housing Price Regression
+Ana Ruiz (1001)
+
+Data Cleaning: 11 / 15
+    Solid work; a few points from the top level are missing or thin.
+Exploratory Analysis: 11 / 15
+    Solid work; a few points from the top level are missing or thin.
+Model & Evaluation: 8 / 20
+    Partly there; key steps are missing or not justified.
+Code Runs & Readability: 3 / 10
+    Partly there; key steps are missing or not justified.
+Explains Reasoning: 15 / 20
+    Solid work; a few points from the top level are missing or thin.
+Walkthrough Clarity: 7 / 10
+    Solid work; a few points from the top level are missing or thin.
+Video Matches Notebook: 5 / 10
+    Solid work; a few points from the top level are missing or thin.
+
+Total: 60 / 100
+
+Good structure overall. See the per-criterion notes for where to push further.

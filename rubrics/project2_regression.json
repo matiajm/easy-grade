@@ -1,0 +1,90 @@
+{
+  "assignment": "Project 2 - Housing Price Regression",
+  "version": 1,
+  "notes": "Sample rubric. Notebook criteria are graded from the .ipynb; video criteria from the walkthrough; 'both' compares the two.",
+  "criteria": [
+    {
+      "id": "data_cleaning",
+      "name": "Data Cleaning",
+      "source": "notebook",
+      "points": 15,
+      "levels": [
+        {"score": 15, "label": "Excellent", "description": "Handles missing values, types and outliers, and explains each choice in markdown."},
+        {"score": 11, "label": "Proficient", "description": "Handles missing values and types; little justification for the choices."},
+        {"score": 6, "label": "Developing", "description": "Cleaning is partial or applied without checking its effect."},
+        {"score": 0, "label": "Missing", "description": "No cleaning step."}
+      ]
+    },
+    {
+      "id": "eda",
+      "name": "Exploratory Analysis",
+      "source": "notebook",
+      "points": 15,
+      "levels": [
+        {"score": 15, "label": "Excellent", "description": "Summary stats plus at least three labeled charts, each followed by a written takeaway."},
+        {"score": 11, "label": "Proficient", "description": "Relevant charts and stats, but takeaways are thin or missing for some."},
+        {"score": 6, "label": "Developing", "description": "Few or unlabeled charts; no interpretation."},
+        {"score": 0, "label": "Missing", "description": "No exploratory analysis."}
+      ]
+    },
+    {
+      "id": "modeling",
+      "name": "Model & Evaluation",
+      "source": "notebook",
+      "points": 20,
+      "levels": [
+        {"score": 20, "label": "Excellent", "description": "Train/test split, fitted regression, R² and RMSE reported, residuals checked, results interpreted."},
+        {"score": 15, "label": "Proficient", "description": "Model fitted and evaluated with at least one metric; interpretation is brief."},
+        {"score": 8, "label": "Developing", "description": "Model fitted without a proper split or evaluation."},
+        {"score": 0, "label": "Missing", "description": "No model."}
+      ]
+    },
+    {
+      "id": "code_quality",
+      "name": "Code Runs & Readability",
+      "source": "notebook",
+      "points": 10,
+      "levels": [
+        {"score": 10, "label": "Excellent", "description": "Runs top to bottom without errors; clear names, sections and comments."},
+        {"score": 7, "label": "Proficient", "description": "Runs with minor issues; mostly readable."},
+        {"score": 3, "label": "Developing", "description": "Errors or out-of-order cells; hard to follow."},
+        {"score": 0, "label": "Missing", "description": "Does not run."}
+      ]
+    },
+    {
+      "id": "explains_reasoning",
+      "name": "Explains Reasoning",
+      "source": "video",
+      "points": 20,
+      "levels": [
+        {"score": 20, "label": "Excellent", "description": "Explains why each major step was done and what the results mean, not only what the code does."},
+        {"score": 15, "label": "Proficient", "description": "Explains most steps; some reasoning is skipped or vague."},
+        {"score": 8, "label": "Developing", "description": "Mostly reads the code aloud with little reasoning."},
+        {"score": 0, "label": "Missing", "description": "No explanation of reasoning."}
+      ]
+    },
+    {
+      "id": "walkthrough_clarity",
+      "name": "Walkthrough Clarity",
+      "source": "video",
+      "points": 10,
+      "levels": [
+        {"score": 10, "label": "Excellent", "description": "Organized, audible, within the time limit, notebook clearly visible."},
+        {"score": 7, "label": "Proficient", "description": "Generally clear; minor pacing or visibility issues."},
+        {"score": 3, "label": "Developing", "description": "Hard to follow, inaudible in parts, or far over/under time."},
+        {"score": 0, "label": "Missing", "description": "No usable video."}
+      ]
+    },
+    {
+      "id": "authenticity",
+      "name": "Video Matches Notebook",
+      "source": "both",
+      "points": 10,
+      "levels": [
+        {"score": 10, "label": "Consistent", "description": "The notebook on screen is the submitted one and the student explains its specific code and results."},
+        {"score": 5, "label": "Partial", "description": "Mostly matches, but some submitted cells are skipped or explained generically."},
+        {"score": 0, "label": "Mismatch", "description": "Video shows a different notebook or cannot explain the submitted work."}
+      ]
+    }
+  ]
+}

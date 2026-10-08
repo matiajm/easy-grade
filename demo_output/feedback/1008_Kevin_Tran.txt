@@ -1,0 +1,21 @@
+Project 2 - Housing Price Regression
+Kevin Tran (1008)
+
+Data Cleaning: 15 / 15
+    Meets every point in the top-level description.
+Exploratory Analysis: 15 / 15
+    Meets every point in the top-level description.
+Model & Evaluation: 15 / 20
+    Solid work; a few points from the top level are missing or thin.
+Code Runs & Readability: 10 / 10
+    Meets every point in the top-level description.
+Explains Reasoning: 0 / 20
+    No video was available to grade.
+Walkthrough Clarity: 0 / 10
+    No video was available to grade.
+Video Matches Notebook: 0 / 10
+    No video was available to grade.
+
+Total: 55 / 100
+
+Good structure overall. See the per-criterion notes for where to push further.

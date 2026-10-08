@@ -1,0 +1,21 @@
+Project 2 - Housing Price Regression
+Priya Nair (1003)
+
+Data Cleaning: 6 / 15
+    Partly there; key steps are missing or not justified.
+Exploratory Analysis: 11 / 15
+    Solid work; a few points from the top level are missing or thin.
+Model & Evaluation: 8 / 20
+    Partly there; key steps are missing or not justified.
+Code Runs & Readability: 7 / 10
+    Solid work; a few points from the top level are missing or thin.
+Explains Reasoning: 0 / 20
+    No video was available to grade.
+Walkthrough Clarity: 0 / 10
+    No video was available to grade.
+Video Matches Notebook: 0 / 10
+    No video was available to grade.
+
+Total: 32 / 100
+
+Your notebook is graded. The video was a Drive link I couldn't open; upload the file itself and I'll grade the video criteria.
