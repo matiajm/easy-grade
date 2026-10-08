@@ -111,14 +111,15 @@ To start over: `python -m grader sample-folder sample_data` rebuilds the folder 
 
 ## 5. Working on the screen without Python (optional)
 
-The whole UI is `ui/index.html`. To change it quickly in a normal browser with fake data:
+The whole UI is `ui/index.html`. To change it quickly in a normal browser, against the real Python backend:
 
 ```bash
-python -m http.server 8000
+python -m desktop.devserver
 ```
 
-Open <http://localhost:8000/ui/index.html?mock> in Chrome. `ui/dev_mock.js` imitates the Python side.
-Reload the page after each edit. Stop the server with `Ctrl+C`.
+Open <http://127.0.0.1:8765/>. `ui/dev_bridge.js` stands in for pywebview. File dialogs can't open in a browser,
+so use the sample folder button, or see `desktop/devserver.py` for how tests answer them. Reload the page after each
+edit. Stop the server with `Ctrl+C`. More in [REVIEW_UI.md](REVIEW_UI.md).
 
 ---
 
@@ -174,7 +175,7 @@ desktop/api.py       everything the screen can ask for (open folder, scores, app
 desktop/media.py     local-only server so the window can play student videos
 desktop/notebook.py  reads .ipynb files for display (text and images only)
 ui/index.html        the screen (same design as the demo page)
-ui/dev_mock.js       fake Python side for working on the screen in a browser
+ui/dev_bridge.js     lets the screen run in a browser against the dev server (desktop/devserver.py)
 grader/              rubric, database, import, scoring contract, export (from step 1)
 samples/             sample notebook and video used by sample-folder and the tests
 build_app.py         packages the app with PyInstaller

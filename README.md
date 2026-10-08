@@ -74,7 +74,7 @@ grader/export.py    Excel workbook, gradebook CSV, feedback files
 grader/cli.py       command line + demo
 app.py              desktop app entry point
 desktop/            the Python side of the app window (api, video server, notebook reader)
-ui/                 the app screen (index.html) + dev_mock.js for browser-only UI work
+ui/                 the app screen (index.html, Valery's design) + dev_bridge.js for browser work (see docs/REVIEW_UI.md)
 samples/            sample notebook and video for testing
 build_app.py        packages the app with PyInstaller
 ```

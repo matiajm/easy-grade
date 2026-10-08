@@ -26,6 +26,11 @@ args = [
     f"--add-data=ui{sep}ui",
     f"--add-data=rubrics{sep}rubrics",
     f"--add-data=samples{sep}samples",
+    # The notebook checks, the sample folder and the guarded exports use the easygrade package and its data.
+    "--collect-submodules=easygrade",
+    f"--add-data=easygrade/config{sep}easygrade/config",
+    f"--add-data=easygrade/fixtures/batch_a{sep}easygrade/fixtures/batch_a",
+    f"--add-data=easygrade/eval/answer_key.json{sep}easygrade/eval",
 ]
 if sys.platform == "darwin":
     args += ["--osx-bundle-identifier", "app.easygrade.desktop"]

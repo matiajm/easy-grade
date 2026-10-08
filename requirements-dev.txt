@@ -1,2 +1,4 @@
 -r requirements.txt
 pyinstaller>=6.0
+playwright>=1.40  # optional: tests/test_ui_e2e.py (uses an installed Edge or Chrome)
+pytest

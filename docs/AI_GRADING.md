@@ -37,7 +37,7 @@ git status
 `git status` should show:
 
 - **modified:** `.cursor/rules/easy-grade.mdc`, `README.md`, `desktop/api.py`, `desktop/notebook.py`,
-  `docs/DESKTOP_APP.md`, `grader/scoring.py`, `requirements.txt`, `ui/dev_mock.js`, `ui/index.html`
+  `docs/DESKTOP_APP.md`, `grader/scoring.py`, `requirements.txt`, `ui/index.html`
 - **new:** `desktop/settings.py`, `docs/AI_GRADING.md`, `grader/ai_grader.py`, `grader/notebook.py`,
   `tests/test_ai_grader.py`
 

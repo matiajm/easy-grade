@@ -3,193 +3,278 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Easy Grade</title>
+<title>EasyGrade</title>
 <style>
-/* Same look as the demo page. System fonts only: the app works offline. */
-:root{
-  --bg:#F2F4F7; --surface:#FFFFFF; --surface-2:#EDF0F4; --ink:#17202B; --muted:#5A6576; --line:#D8DDE5;
-  --accent:#2B54C6; --accent-ink:#FFFFFF; --accent-soft:#E2E9FB;
-  --vid:#7B3BB0; --vid-soft:#F0E5F8;
-  --ok:#1D774A; --ok-soft:#DDF1E5; --warn:#8F5B00; --warn-soft:#FFF0D2; --bad:#B0222B; --bad-soft:#FBE2E3;
-  --code-bg:#F7F8FA;
-  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
-  --r:8px; color-scheme:light;
+/* Design by Valery (docs/design/review-flow-sketch.html), wired to the app's Python backend.
+   System fonts only: the app works offline and sends nothing out. */
+:root {
+  --bg: #f5f4f8; --card: #ffffff; --soft: #f8f7fb; --line: #e4e1eb; --fg: #1b1830; --muted: #69637e;
+  --accent: #6d28d9; --accent-fg: #ffffff; --accent-soft: #efe8fc; --track: #ebe8f2;
+  --warn: #8f5400; --warn-soft: #fcf1dc; --ok: #1d7a4a; --ok-soft: #e3f3ea; --bad: #b0222b; --bad-soft: #fbe2e3;
+  --code-bg: #f7f8fa;
+  --font-ui: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: light;
 }
-@media (prefers-color-scheme: dark){:root{
-  --bg:#0E1218; --surface:#151A22; --surface-2:#1C222C; --ink:#E5E9EF; --muted:#9AA4B4; --line:#2A313C;
-  --accent:#7E9DF4; --accent-ink:#0E1218; --accent-soft:#1E2946;
-  --vid:#C18FEA; --vid-soft:#2C1F3A;
-  --ok:#5BC38C; --ok-soft:#142D1F; --warn:#E6B24D; --warn-soft:#32270F; --bad:#F27E85; --bad-soft:#38191C;
-  --code-bg:#11161D; color-scheme:dark;}}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111018; --card: #1a1825; --soft: #1f1c2b; --line: #302b42; --fg: #ece9f5; --muted: #a39cb8;
+    --accent: #a78bfa; --accent-fg: #1e1236; --accent-soft: #2a2045; --track: #2a263a;
+    --warn: #f0b457; --warn-soft: #36290f; --ok: #5fd194; --ok-soft: #16301f; --bad: #f27e85; --bad-soft: #38191c;
+    --code-bg: #11161d; color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--fg); font: 15px/1.55 var(--font-ui); padding-inline: 16px; padding-block: 20px 64px; }
+[hidden] { display: none !important; }
+.page { max-width: 960px; margin: 0 auto; display: grid; gap: 20px; }
+.num { font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button { font: inherit; color: inherit; cursor: pointer; }
+h1, h2, h3 { margin: 0; }
+.muted { color: var(--muted); }
+.mono { font-family: var(--font-mono); }
 
-*{box-sizing:border-box}
-html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--f-body)}
-h1,h2,h3{margin:0;font-weight:600;text-wrap:balance}
-h1{font-size:28px;letter-spacing:-.01em}
-h2{font-size:20px}
-h3{font-size:14px}
-p{margin:0}
-.muted{color:var(--muted)}
-.mono{font-family:var(--f-mono)}
-.num{font-variant-numeric:tabular-nums}
-button{font:inherit;color:inherit;cursor:pointer}
-button:focus-visible,input:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.btn{border:1px solid var(--line);background:var(--surface);padding:7px 12px;border-radius:var(--r);font-weight:500;font-size:13px}
-.btn:hover{border-color:var(--muted)}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-.btn:disabled{opacity:.45;cursor:not-allowed}
-.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+/* top bar */
+.topbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.brand { font-size: 13px; font-weight: 600; color: var(--accent); }
+.topbar .where { font: 12px var(--font-mono); color: var(--muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.topbar .right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.pill { font-size: 12px; font-weight: 500; padding: 3px 10px; border-radius: 999px; background: var(--ok-soft); color: var(--ok); white-space: nowrap; }
+.pill.ai { background: var(--accent-soft); color: var(--accent); }
 
-/* shell */
-.shell{height:100%;display:grid;grid-template-rows:auto 1fr;}
-.titlebar{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--surface-2);min-width:0}
-.titlebar .name{font-weight:600}
-.titlebar .path{font:12px var(--f-mono);color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.titlebar .right{margin-left:auto;display:flex;gap:8px;align-items:center}
-.pill{font:500 11px var(--f-mono);padding:3px 8px;border-radius:99px;background:var(--ok-soft);color:var(--ok);white-space:nowrap}
-.body{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:0}
-.rail{border-right:1px solid var(--line);padding:12px 10px;display:flex;flex-direction:column;gap:4px;background:var(--surface);overflow:auto}
-.step{display:grid;grid-template-columns:26px 1fr;gap:2px 10px;align-items:center;text-align:left;border:0;background:none;padding:10px;border-radius:var(--r)}
-.step .n{grid-row:span 2;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font:500 12px var(--f-mono);border:1px solid var(--line);color:var(--muted)}
-.step .t{font-weight:600}
-.step .s{font-size:12px;color:var(--muted)}
-.step:hover{background:var(--surface-2)}
-.step[aria-current="step"]{background:var(--accent-soft)}
-.step[aria-current="step"] .n{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-.step:disabled{opacity:.45;cursor:not-allowed}
-.work{padding:22px;overflow:auto;display:grid;gap:18px;align-content:start;grid-auto-rows:max-content;min-width:0}
-.head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
-.lede{color:var(--muted);max-width:70ch;margin-top:4px}
+/* buttons */
+.btn { border: 1px solid var(--line); background: var(--card); color: var(--fg); border-radius: 10px; padding: 10px 16px; font-weight: 500; }
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn.small { padding: 6px 12px; font-size: 13px; }
+.btn.primary { border: 0; padding: 11px 20px; background: var(--accent); color: var(--accent-fg); font-weight: 600; }
+.btn.primary:hover { color: var(--accent-fg); filter: brightness(1.08); }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.link-btn { background: none; border: 0; padding: 0; color: var(--accent); font-weight: 500; font-size: 14px; }
+.link-btn:disabled { opacity: .4; cursor: not-allowed; }
 
-/* bits */
-.chip{display:inline-flex;align-items:center;gap:5px;font:500 11px/1 var(--f-mono);padding:4px 7px;border-radius:99px;white-space:nowrap}
-.src-notebook{background:var(--accent-soft);color:var(--accent)}
-.src-video{background:var(--vid-soft);color:var(--vid)}
-.src-both{background:var(--surface-2);color:var(--ink);border:1px solid var(--line)}
-.st-approved{background:var(--ok-soft);color:var(--ok)}
-.st-graded{background:var(--warn-soft);color:var(--warn)}
-.st-pending,.st-error{background:var(--surface-2);color:var(--muted)}
-.flag{background:var(--bad-soft);color:var(--bad)}
-.ev{border:1px solid var(--line);background:var(--surface);color:var(--ink)}
-.ev:hover{border-color:var(--accent);color:var(--accent)}
-.note{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:12px 14px;display:grid;gap:6px}
-.note.warn{border-color:var(--warn);background:var(--warn-soft)}
-.stats{display:flex;gap:10px;flex-wrap:wrap}
-.stat{border:1px solid var(--line);border-radius:var(--r);padding:8px 12px;display:grid;min-width:110px;background:var(--surface)}
-.stat b{font-size:20px;font-variant-numeric:tabular-nums}
-.stat span{font-size:12px;color:var(--muted)}
-.tbl-wrap{overflow:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
-table{border-collapse:collapse;width:100%;font-size:13px}
-th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
-th{font:500 11px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--surface-2);white-space:nowrap;position:sticky;top:0}
-tr:last-child td{border-bottom:0}
-.r{text-align:right}
-.crit-row{cursor:pointer}
-.crit-row:hover td{background:var(--surface-2)}
-.levels td{background:var(--code-bg)}
-.lvls{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}
-.lvl{border:1px solid var(--line);border-radius:6px;padding:8px;background:var(--surface)}
-td.chg{color:var(--bad);font-weight:600}
-tr.unapproved td{background:var(--warn-soft)}
-.progress{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden;border:1px solid var(--line)}
-.progress i{display:block;height:100%;background:var(--accent);transition:width .2s}
+/* review header, steps, list */
+.head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px 24px; }
+.head h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
+.head .sub { color: var(--muted); margin-top: 2px; }
+.steps { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 0; padding: 12px 16px; list-style: none; background: var(--card); border: 1px solid var(--line); border-radius: 12px; font-size: 14px; color: var(--muted); }
+.steps li { display: flex; gap: 8px; align-items: center; }
+.steps b { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-size: 12px; }
+.list { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.cols, .row { display: grid; grid-template-columns: minmax(0, 2.2fr) 110px minmax(0, 2.4fr) minmax(0, 1.2fr) 150px; gap: 16px; align-items: center; padding: 0 20px; }
+.cols { font-size: 12px; font-weight: 600; color: var(--muted); padding-block: 12px; border-bottom: 1px solid var(--line); background: var(--soft); }
+.team { border-bottom: 1px solid var(--line); }
+.team:last-child { border-bottom: 0; }
+.row { padding-block: 16px; }
+.open-btn { all: unset; cursor: pointer; display: flex; gap: 12px; align-items: center; min-width: 0; }
+.open-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 6px; }
+.chev { flex: none; width: 24px; height: 24px; border-radius: 6px; display: grid; place-items: center; background: var(--soft); color: var(--muted); transition: transform .15s; font-size: 14px; }
+.open-btn[aria-expanded="true"] .chev { transform: rotate(90deg); background: var(--accent-soft); color: var(--accent); }
+.names { font-weight: 600; overflow-wrap: anywhere; }
+.team-id { font-size: 12px; color: var(--muted); }
+.grade { font-size: 20px; font-weight: 700; }
+.grade small { font-size: 13px; font-weight: 400; color: var(--muted); }
+.attn { font-size: 14px; min-width: 0; }
+.attn .first { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+.attn .more { font-size: 12px; color: var(--muted); }
+.attn.none { color: var(--muted); }
+.tag { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+.tag.warn { background: var(--warn-soft); color: var(--warn); }
+.tag.clear { color: var(--muted); padding-inline: 0; }
+.review-btn { border: 1px solid var(--line); background: var(--card); border-radius: 9px; padding: 8px 12px; font-size: 14px; font-weight: 500; justify-self: end; white-space: nowrap; }
+.review-btn:hover { border-color: var(--accent); color: var(--accent); }
+.review-btn.done { background: var(--ok-soft); border-color: transparent; color: var(--ok); }
+.review-btn:disabled { opacity: .4; cursor: not-allowed; }
 
-/* welcome */
-.welcome{display:grid;place-items:center;height:100%;padding:24px}
-.welcome .card{max-width:560px;display:grid;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:28px}
-.welcome ol{margin:0;padding-left:20px;color:var(--muted);display:grid;gap:4px}
+/* dropdown details */
+.details { padding: 4px 20px 24px 56px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 20px 32px; background: var(--soft); border-top: 1px solid var(--line); }
+.overall { grid-column: 1 / -1; margin-top: 16px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: grid; gap: 10px; }
+.overall p { margin: 0; font-size: 15px; max-width: 70ch; }
+.overall .label { font-size: 13px; font-weight: 600; }
+.extremes { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 13px; color: var(--muted); }
+.extremes b { color: var(--fg); font-weight: 600; }
+.details h3 { margin: 16px 0 8px; font-size: 13px; font-weight: 600; }
+.details h3 span { font-weight: 400; color: var(--muted); }
+.bullets { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 14px; }
+.ai-box { border-radius: 10px; padding: 12px 14px; font-size: 14px; display: grid; gap: 6px; }
+.ai-box.warn { background: var(--warn-soft); }
+.ai-box.clear { background: var(--card); color: var(--muted); border: 1px solid var(--line); }
+.ai-box .note { font-size: 12.5px; color: var(--muted); }
+.cats { display: grid; gap: 14px; }
+.cat-top { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+.cat-name { font-weight: 500; }
+.cat-score { white-space: nowrap; }
+.cat-score input { width: 64px; font: inherit; text-align: right; border: 1px solid var(--accent); border-radius: 7px; padding: 2px 6px; background: var(--card); color: var(--fg); }
+.bar { height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; margin: 6px 0 4px; }
+.bar span { display: block; height: 100%; border-radius: 3px; background: var(--accent); }
+.cat-why { font-size: 13px; color: var(--muted); margin: 0; }
+.cat-ev { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 4px 0 0; font-size: 12px; color: var(--muted); }
+.ev { border: 1px solid var(--line); background: var(--card); color: var(--fg); border-radius: 999px; padding: 2px 9px; font: 12px var(--font-mono); }
+.ev:hover { border-color: var(--accent); color: var(--accent); }
+.changed { font-size: 13px; color: var(--accent); }
+.change-row { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin-top: 14px; }
+.det-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+textarea { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font: 14px var(--font-ui); background: var(--card); color: var(--fg); resize: vertical; }
+.cmt { margin-top: 6px; }
 
-/* review */
-.review{display:grid;grid-template-columns:200px minmax(0,1fr) minmax(320px,400px);gap:16px;align-items:start}
-.queue{display:grid;gap:4px;max-height:calc(100vh - 220px);overflow:auto}
-.qitem{display:grid;grid-template-columns:1fr auto;gap:2px 6px;border:1px solid transparent;background:none;text-align:left;padding:8px;border-radius:6px}
-.qitem:hover{background:var(--surface-2)}
-.qitem[aria-selected="true"]{border-color:var(--accent);background:var(--accent-soft)}
-.qitem .nm{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.qitem .tt{font:500 12px var(--f-mono);color:var(--muted)}
-.qitem .chip{grid-column:1/-1;justify-self:start}
-.panel{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);min-width:0}
-.tabs{display:flex;border-bottom:1px solid var(--line);align-items:center}
-.tab{border:0;background:none;padding:10px 14px;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
-.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
-.tabs .file{margin-left:auto;padding:0 12px;font:11px var(--f-mono);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.panel-body{padding:12px;display:grid;gap:10px;max-height:calc(100vh - 230px);overflow:auto}
-.cell{display:grid;grid-template-columns:48px minmax(0,1fr);gap:8px;border-radius:6px;padding:4px;transition:background .3s}
-.cell .in{font:11px var(--f-mono);color:var(--muted);padding-top:8px;text-align:right;line-height:1.3}
-.cell pre{margin:0;font:12px/1.5 var(--f-mono);background:var(--code-bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;overflow-x:auto}
-.cell .md{padding:4px 10px;white-space:pre-wrap}
-.cell .out{font:12px/1.5 var(--f-mono);padding:6px 10px;white-space:pre;overflow-x:auto}
-.cell .out.err{color:var(--bad);background:var(--bad-soft);border-radius:6px}
-.cell img{max-width:100%;height:auto;display:block;margin-top:6px;background:#fff;border-radius:4px}
-.cell.hl{background:var(--warn-soft)}
-.empty{padding:28px 16px;text-align:center;color:var(--muted)}
-video{width:100%;border-radius:6px;background:#000;max-height:60vh}
-.scorecard{display:grid;gap:10px}
-.crit{border:1px solid var(--line);border-radius:var(--r);padding:10px;display:grid;gap:8px;background:var(--surface)}
-.crit.low{border-color:var(--warn)}
-.crit-top{display:flex;gap:8px;align-items:center;justify-content:space-between}
-.seg{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
-.seg button{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:4px 8px;font:500 12px var(--f-mono)}
-.seg button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--surface)}
-.seg .ai{font-size:9px;color:var(--accent);margin-left:4px}
-.seg button[aria-pressed="true"] .ai{color:var(--surface)}
-.meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--muted)}
-.changed{color:var(--bad);font:600 11px var(--f-mono)}
-textarea{width:100%;border:1px solid var(--line);border-radius:6px;padding:6px 8px;font:13px var(--f-body);background:var(--surface);color:var(--ink);resize:vertical}
-.totalbar{position:sticky;bottom:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap}
-.totalbar b{font-size:22px;font-variant-numeric:tabular-nums}
-.flagline{background:var(--bad-soft);color:var(--bad);border-radius:6px;padding:6px 10px;font-size:13px}
-.result{font:12px/1.7 var(--f-mono);white-space:pre-wrap}
-.modal-bg{position:fixed;inset:0;background:rgb(0 0 0 / .35);display:grid;place-items:center;padding:24px;z-index:5}
-.modal{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:22px;width:min(560px,100%);max-height:calc(100vh - 48px);overflow:auto;display:grid;gap:14px;box-shadow:0 20px 50px rgb(0 0 0 / .3)}
-.field{display:grid;gap:4px}
-.field label{font-weight:600;font-size:13px}
-.field input[type=text],.field input[type=password]{border:1px solid var(--line);border-radius:6px;padding:8px 10px;font:13px var(--f-mono);background:var(--surface);color:var(--ink);width:100%}
-.check{display:flex;gap:8px;align-items:flex-start;font-size:13px}
-.check input{margin-top:3px}
-.hint{font-size:12px;color:var(--muted)}
-.pill.ai{background:var(--accent-soft);color:var(--accent)}
-details.tools{border:1px dashed var(--line);border-radius:var(--r);padding:8px 12px}
-details.tools summary{cursor:pointer;color:var(--muted);font-size:13px}
-.fail{font-size:13px;color:var(--bad)}
-.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:10px 14px;border-radius:var(--r);font-size:13px;max-width:calc(100vw - 32px);box-shadow:0 8px 24px rgb(0 0 0 / .25);z-index:10}
-.toast.err{background:var(--bad);color:#fff}
+/* start, match and progress screens */
+.start { max-width: 600px; width: 100%; margin: 8px auto 0; display: grid; gap: 18px; }
+.start.wide { max-width: 880px; }
+.start h1 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.01em; }
+.start .lead { margin: 0; color: var(--muted); }
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 24px; display: grid; gap: 20px; }
+.field { display: grid; gap: 8px; }
+.field > label, .field > .label { font-size: 14px; font-weight: 600; }
+select { font: inherit; color: inherit; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.folder { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--soft); }
+.folder.chosen { border-color: var(--accent); background: var(--card); }
+.folder-icon { flex: none; width: 22px; height: 17px; border-radius: 3px; background: var(--accent-soft); border: 2px solid var(--accent); position: relative; }
+.folder-icon::before { content: ""; position: absolute; left: -2px; top: -6px; width: 9px; height: 5px; border-radius: 2px 2px 0 0; background: var(--accent); }
+.folder-path { flex: 1; min-width: 0; font: 13px/1.4 var(--font-mono); color: var(--muted); overflow-wrap: anywhere; }
+.folder.chosen .folder-path { color: var(--fg); }
+.hint { font-size: 13px; color: var(--muted); }
+.preview { border-radius: 12px; padding: 12px 14px; background: var(--soft); display: grid; gap: 6px; font-size: 14px; }
+.preview .ok-line { color: var(--ok); font-weight: 500; }
+.preview .warn-line { color: var(--warn); }
+.privacy { font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: flex-start; margin: 0; }
+.privacy span:first-child { color: var(--ok); }
+.rubric-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.rubric-row select { flex: 1; min-width: 0; }
+.rubric-used { font-size: 13px; color: var(--ok); }
+.rubric-panel { border: 1px dashed var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 10px; background: var(--soft); }
+.rubric-panel .panel-title { font-size: 14px; font-weight: 600; }
+.mini { width: 100%; border-collapse: collapse; font-size: 13px; }
+.mini td { padding: 5px 10px 5px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+.mini tr:last-child td { border-bottom: 0; }
+.mini .ranges { color: var(--muted); }
+.start-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; }
+.match-summary { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: 14px; }
+.match-summary .ok-line { color: var(--ok); font-weight: 500; }
+.match-summary .warn-line { color: var(--warn); font-weight: 500; }
+.match-list { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.m-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) 150px; gap: 12px 20px; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.m-row:last-child { border-bottom: 0; }
+.m-row.needs { background: var(--warn-soft); }
+.m-who b { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.m-files { display: grid; gap: 6px; min-width: 0; }
+.m-file { display: grid; grid-template-columns: 70px minmax(0, 1fr); gap: 10px; align-items: center; font-size: 13px; }
+.m-file .ftype { color: var(--muted); }
+.m-file .fname { font: 12.5px/1.4 var(--font-mono); overflow-wrap: anywhere; }
+.m-file .missing { color: var(--warn); font-weight: 500; }
+.m-file select { font: 13px var(--font-ui); border: 1px solid var(--warn); border-radius: 8px; padding: 6px 8px; max-width: 100%; }
+.m-status { font-size: 13px; font-weight: 600; justify-self: end; text-align: right; }
+.m-status.ok { color: var(--ok); } .m-status.warn { color: var(--warn); } .m-status.muted { color: var(--muted); font-weight: 500; }
+.mode { display: grid; gap: 8px; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; background: var(--soft); }
+.mode legend { font-size: 14px; font-weight: 600; padding: 0 6px; }
+.mode label { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; }
+.mode input { margin-top: 4px; }
+.mode small { display: block; color: var(--muted); font-size: 13px; }
+.steps-run { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.steps-run li { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.state { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+.state.running { border-color: var(--accent); border-top-color: transparent; animation: spin .8s linear infinite; }
+.state.done { background: var(--ok); border-color: var(--ok); color: var(--card); }
+.state.warn { background: var(--warn); border-color: var(--warn); color: var(--card); }
+.state.skip { background: var(--track); border-color: var(--track); color: var(--muted); }
+.steps-run .what { font-weight: 500; }
+.steps-run .what small { display: block; font-weight: 400; color: var(--muted); font-size: 13px; }
+.steps-run .count { color: var(--muted); font-size: 14px; }
+.run-bar { height: 8px; border-radius: 4px; background: var(--track); overflow: hidden; }
+.run-bar span { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s; }
+.found { font-size: 14px; color: var(--muted); margin: 0; }
+.fail { font-size: 13px; color: var(--bad); }
+@keyframes spin { to { transform: rotate(360deg); } }
+.note-box { border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 12px 14px; display: grid; gap: 6px; font-size: 14px; }
+.note-box.warn { border-color: var(--warn); background: var(--warn-soft); }
 
-@media (max-width:1180px){.review{grid-template-columns:180px minmax(0,1fr)}.review .scorecol{grid-column:1/-1}}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* footer */
+.foot { display: flex; flex-wrap: wrap; gap: 12px 20px; justify-content: space-between; align-items: center; }
+.foot .muted { font-size: 14px; }
+.foot-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.export-note { font-size: 14px; }
+.export-note .path { font: 12.5px var(--font-mono); overflow-wrap: anywhere; }
+details.more { border: 1px dashed var(--line); border-radius: 12px; padding: 10px 14px; }
+details.more summary { cursor: pointer; color: var(--muted); font-size: 14px; }
+.toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--fg); color: var(--card); padding: 10px 16px; border-radius: 10px; font-size: 14px; max-width: calc(100vw - 32px); box-shadow: 0 8px 24px rgb(0 0 0 / .25); z-index: 30; }
+.toast.err { background: var(--bad); color: #fff; }
+
+/* modal and evidence drawer */
+.modal-bg { position: fixed; inset: 0; background: rgb(0 0 0 / .35); display: grid; place-items: center; padding: 24px; z-index: 20; }
+.modal { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 24px; width: min(560px, 100%); max-height: calc(100vh - 48px); overflow: auto; display: grid; gap: 14px; box-shadow: 0 20px 50px rgb(0 0 0 / .3); }
+.modal .field input[type=text], .modal .field input[type=password] { border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; font: 13px var(--font-mono); background: var(--card); color: var(--fg); width: 100%; }
+.check { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; }
+.check input { margin-top: 4px; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.drawer-bg { position: fixed; inset: 0; background: rgb(0 0 0 / .25); z-index: 15; }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(680px, 100%); background: var(--card); border-left: 1px solid var(--line); z-index: 16; display: grid; grid-template-rows: auto auto 1fr; box-shadow: -12px 0 40px rgb(0 0 0 / .2); }
+.drawer-top { display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+.drawer-top h2 { font-size: 16px; overflow-wrap: anywhere; }
+.tabs { display: flex; border-bottom: 1px solid var(--line); align-items: center; padding-inline: 8px; }
+.tab { border: 0; background: none; padding: 10px 14px; font-weight: 500; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tab[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
+.tabs .file { margin-left: auto; padding: 0 10px; font: 11px var(--font-mono); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.ev-body { padding: 14px; display: grid; gap: 10px; overflow: auto; align-content: start; }
+.cell { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 8px; border-radius: 6px; padding: 4px; transition: background .3s; }
+.cell .in { font: 11px var(--font-mono); color: var(--muted); padding-top: 8px; text-align: right; line-height: 1.3; }
+.cell pre { margin: 0; font: 12px/1.5 var(--font-mono); background: var(--code-bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; overflow-x: auto; }
+.cell .md { padding: 4px 10px; white-space: pre-wrap; }
+.cell .out { font: 12px/1.5 var(--font-mono); padding: 6px 10px; white-space: pre; overflow-x: auto; }
+.cell .out.err { color: var(--bad); background: var(--bad-soft); border-radius: 6px; }
+.cell img { max-width: 100%; height: auto; display: block; margin-top: 6px; background: #fff; border-radius: 4px; }
+.cell.hl { background: var(--warn-soft); }
+.empty { padding: 28px 16px; text-align: center; color: var(--muted); }
+video { width: 100%; border-radius: 8px; background: #000; max-height: 60vh; }
+
+@media (max-width: 760px) {
+  .cols { display: none; }
+  .row { grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; }
+  .row .grade { justify-self: end; }
+  .row .attn, .row .ai-cell { grid-column: 1 / -1; padding-left: 36px; }
+  .row .review-btn { grid-column: 1 / -1; justify-self: start; margin-left: 36px; }
+  .details { grid-template-columns: minmax(0, 1fr); padding-left: 20px; }
+  .m-row { grid-template-columns: minmax(0, 1fr); }
+  .m-status { justify-self: start; text-align: left; }
+}
+@media (prefers-reduced-motion: reduce) { .chev, .run-bar span { transition: none; } .state.running { animation: none; } }
 </style>
 </head>
 <body>
-<div id="root" class="welcome"><p class="muted">Starting…</p></div>
+<div class="page" id="root"><p class="muted">Starting…</p></div>
 <div class="toast" id="toast" role="status" hidden></div>
 
 <script>
 (function () {
 "use strict";
 // ---------------------------------------------------------------------------
-// State. Python is the source of truth; this only remembers what's on screen.
+// State. Python is the source of truth; this only remembers what is on screen.
 // ---------------------------------------------------------------------------
 const S = {
-  state: null,          // from api.get_state()
-  step: 0,              // 0 rubric · 1 submissions · 2 grading · 3 review · 4 export
-  sel: null,            // selected student id in Review
-  student: null,        // from api.get_student()
-  evTab: "notebook",
-  hlCell: null,
-  openCrit: null,
-  grading: null,        // {done, total, current}
-  exportResult: null,
+  view: "start",            // start | match | run | review
+  state: null,              // api.get_state()
+  review: null,             // api.get_review()
+  rubrics: [],              // built-in rubrics for the dropdown
+  rubricPick: null,         // value of the dropdown: a file name, or "current"
+  rubricPreview: null,      // preview of the picked rubric
+  replaceOpen: false,       // the "Replace rubric" panel
+  pending: null,            // {path, name, ...preview} chosen in the panel, not used yet
+  usedNote: "",             // "Using the rubric from ..."
+  replaceWarn: null,        // the rubric can't be changed without losing scores
+  matches: null,            // api.get_matches()
+  mode: null,               // how to grade: ai | sim | hand
+  regrade: false,
+  run: null,                // progress of the grading run
+  open: {},                 // review rows that are expanded
+  editing: {},              // review rows whose scores are being changed
+  ev: null,                 // evidence drawer: {id, data, tab, hl}
+  settings: null,           // Settings window
+  exportNote: null,         // result of the last export
   includeUnapproved: false,
-  replaceWarn: null,
-  settings: null,       // from api.get_settings() while the Settings window is open
-  lastRun: null,        // summary of the last AI grading run
 };
-const SRC = { notebook: "Notebook", video: "Video", both: "Both" };
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const fmt = (n) => (n == null ? "—" : String(Math.round(n * 10) / 10));
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many || one + "s"}`;
 const isMac = /Mac/i.test(navigator.platform || navigator.userAgent);
 
 function toast(msg, isErr) {
@@ -201,7 +286,7 @@ function toast(msg, isErr) {
   toast.h = setTimeout(() => (t.hidden = true), isErr ? 6000 : 3200);
 }
 
-// Call Python. Returns the result, or null after showing the error.
+// Call Python. Returns the result, or {failed, error} after showing the error.
 async function call(name, ...args) {
   try {
     const r = await window.pywebview.api[name](...args);
@@ -216,7 +301,6 @@ async function call(name, ...args) {
   }
 }
 const ok = (r) => r && !r.failed;
-// Same as call() but returns {error} instead of showing a toast (for batch runs).
 async function callQuiet(name, ...args) {
   try {
     const r = await window.pywebview.api[name](...args);
@@ -226,133 +310,323 @@ async function callQuiet(name, ...args) {
   }
 }
 
-async function refresh() {
+async function refreshState() {
   const st = await call("get_state");
   if (ok(st)) S.state = st;
-  render();
 }
-async function loadStudent(id) {
-  S.sel = id;
-  const d = await call("get_student", id);
-  S.student = ok(d) ? d : null;
+async function refreshReview() {
+  if (!S.state || !S.state.rubric) { S.review = null; return; }
+  const rv = await call("get_review");
+  if (ok(rv)) S.review = rv;
+}
+async function refreshAll() { await refreshState(); await refreshReview(); }
+async function refreshMatches() {
+  if (!S.state || !S.state.folder) { S.matches = null; return; }
+  const m = await call("get_matches");
+  if (ok(m)) S.matches = m;
 }
 
 // ---------------------------------------------------------------------------
-// Views
+// Small helpers
 // ---------------------------------------------------------------------------
-function viewWelcome() {
-  return `<div class="card">
-    <h1>Easy Grade</h1>
-    <p class="muted">Grade notebook + video projects against your rubric. Everything stays on this computer.</p>
-    <ol>
-      <li>Open the folder with the students' submissions (the unzipped LMS download).</li>
-      <li>Choose the rubric.</li>
-      <li>Grade, review each student, approve.</li>
-      <li>Export grades to Excel and a gradebook CSV.</li>
-    </ol>
-    <p class="muted" style="font-size:13px">The app saves its work in a <span class="mono">_grading</span> folder inside the folder you open, so you can stop and come back later.</p>
-    <div class="actions"><button class="btn primary" data-act="choose-folder">Open submissions folder…</button></div>
-  </div>`;
+function ranges(levels, points) {
+  return levels.map((l, i) => {
+    const hi = i === 0 ? points : levels[i - 1].min - 1;
+    return `${esc(l.label)} ${l.min === hi ? fmt(l.min) : fmt(l.min) + "–" + fmt(hi)}`;
+  }).join(" · ");
 }
-
-function stepsInfo() {
-  const st = S.state, c = st.counts, r = st.rubric;
-  return [
-    { t: "Rubric", s: r ? `${r.criteria.length} criteria · ${fmt(r.total_points)} pts` : "Not chosen yet", on: true },
-    { t: "Submissions", s: `${st.students.length} students · ${c.flagged} flagged`, on: true },
-    { t: "Grading", s: `${c.graded + c.approved} graded`, on: !!r },
-    { t: "Review", s: `${c.graded} waiting`, on: !!r },
-    { t: "Export", s: `${c.approved} approved`, on: !!r },
-  ];
-}
-
-function viewShell() {
-  const st = S.state;
-  return `<div class="shell">
-    <div class="titlebar">
-      <span class="name">Easy Grade</span>
-      <span class="path" title="${esc(st.folder)}">${esc(st.rubric ? st.rubric.assignment + " · " : "")}${esc(st.folder)}</span>
-      <span class="right">${st.ai_ready ? `<span class="pill ai" title="Notebook text and charts are sent to the AI service for grading. Videos stay on this computer.">AI grading on</span>` : `<span class="pill" title="Files are read and processed on this computer">Runs locally</span>`}<button class="btn" data-act="settings">Settings</button><button class="btn" data-act="choose-folder">Change folder…</button></span>
-    </div>
-    <div class="body">
-      <nav class="rail" aria-label="Steps">${stepsInfo().map((x, i) => `<button class="step" data-step="${i}" ${S.step === i ? 'aria-current="step"' : ""} ${x.on ? "" : "disabled"}><span class="n">${i + 1}</span><span class="t">${x.t}</span><span class="s">${esc(x.s)}</span></button>`).join("")}</nav>
-      <main class="work" id="work">${[viewRubric, viewSubmissions, viewGrading, viewReview, viewExport][S.step]()}</main>
-    </div>
-  </div>`;
-}
-
 function rubricTable(r) {
-  return `<div class="tbl-wrap"><table>
-    <thead><tr><th>Criterion</th><th>Graded from</th><th class="r">Points</th><th>Level scores</th></tr></thead>
-    <tbody>${r.criteria.map((c) => `
-      <tr class="crit-row" data-crit="${esc(c.id)}" tabindex="0"><td><b>${esc(c.name)}</b><div class="muted mono" style="font-size:11px">${esc(c.id)}</div></td>
-      <td><span class="chip src-${c.source}">${SRC[c.source]}</span></td><td class="r num">${fmt(c.points)}</td>
-      <td class="muted num">${c.levels.map((l) => fmt(l.score)).join(" / ")}</td></tr>
-      ${S.openCrit === c.id ? `<tr class="levels"><td colspan="4"><div class="lvls">${c.levels.map((l) => `<div class="lvl"><b>${fmt(l.score)}</b> · ${esc(l.label)}<div class="muted" style="font-size:12px;margin-top:4px">${esc(l.description)}</div></div>`).join("")}</div></td></tr>` : ""}`).join("")}
-    </tbody></table></div>`;
+  return `<table class="mini">${r.criteria.map((c) => `<tr><td>${esc(c.name)}</td><td class="num">${fmt(c.points)} pts</td><td class="ranges num">${ranges(c.levels, c.points)}</td></tr>`).join("")}</table>`;
 }
+const rubricLine = (r) => `${esc(r.assignment)} · ${fmt(r.total_points)} points · ${plural(r.criteria.length, "category", "categories")}`;
+const sortedRows = () => [...S.review.rows].sort((a, b) => (a.status === "approved") - (b.status === "approved") || b.check.length - a.check.length || a.name.localeCompare(b.name));
+const aiOn = () => !!(S.state && S.state.ai_ready);
 
-function viewRubric() {
-  const r = S.state.rubric;
-  const warn = S.replaceWarn ? `<div class="note warn"><b>This assignment already has scores.</b><p>${esc(S.replaceWarn)}</p><div class="actions"><button class="btn primary" data-act="replace-rubric">Choose a rubric and replace anyway</button><button class="btn" data-act="cancel-replace">Keep the current rubric</button></div></div>` : "";
-  if (!r) {
-    return `<div class="head"><div><h2>1 · Rubric</h2><p class="lede">Choose the rubric for this assignment: a .json file, or an Excel/CSV sheet with one row per level. The app checks it and keeps a copy in <span class="mono">_grading/rubric.json</span>.</p></div></div>
-      ${warn}
-      <div class="actions"><button class="btn primary" data-act="choose-rubric">Choose rubric file…</button><button class="btn" data-act="sample-rubric">Use the sample rubric</button><button class="btn" data-act="template">Save Excel template…</button></div>`;
-  }
-  const by = (k) => r.criteria.filter((c) => c.source === k).reduce((a, c) => a + c.points, 0);
-  return `<div class="head"><div><h2>1 · Rubric</h2><p class="lede">${esc(r.assignment)}. The AI must pick one of these levels for each criterion, and each criterion becomes a column in the export. Click a row to see its levels.</p></div>
-    <div class="actions"><button class="btn" data-act="choose-rubric">Replace rubric…</button><button class="btn" data-act="template">Save Excel template…</button></div></div>
-    ${warn}
-    <div class="stats"><div class="stat"><b>${fmt(r.total_points)}</b><span>points total</span></div><div class="stat"><b>${fmt(by("notebook"))}</b><span>from the notebook</span></div><div class="stat"><b>${fmt(by("video"))}</b><span>from the video</span></div><div class="stat"><b>${fmt(by("both"))}</b><span>video vs. notebook</span></div></div>
-    ${rubricTable(r)}
-    <div class="actions"><button class="btn primary" data-step="1">Next: check submissions</button></div>`;
-}
-
-function viewSubmissions() {
+function topbar() {
   const st = S.state;
-  const rows = st.students.map((s) => `<tr><td class="mono num">${esc(s.id)}</td><td>${esc(s.name || "—")}</td>
-      <td>${s.has_notebook ? "✓" : "—"}</td><td>${s.has_video ? "✓" : "—"}</td>
-      <td><span class="chip st-${s.status}">${esc(s.status_label)}</span></td>
-      <td>${s.flags.length ? s.flags.map((f) => `<span class="chip flag" title="${esc(f)}">${esc(f.length > 50 ? f.slice(0, 48) + "…" : f)}</span>`).join(" ") : '<span class="muted">—</span>'}</td></tr>`).join("");
-  return `<div class="head"><div><h2>2 · Submissions</h2><p class="lede">Each student is matched to a notebook and a video. Works with one folder per student or the flat LMS download naming. Anything that needs attention is flagged.</p></div>
-    <div class="actions"><button class="btn" data-act="scan" ${st.rubric ? "" : "disabled"}>Scan folder again</button></div></div>
-    <p class="muted" style="font-size:13px">${st.roster ? `Names and emails come from <span class="mono">${esc(st.roster.split(/[\\/]/).pop())}</span>.` : `No roster found. Put a <span class="mono">roster.csv</span> (student_id, student_name, email) in the folder to get names and emails.`}</p>
-    ${st.students.length ? `<div class="tbl-wrap"><table><thead><tr><th>ID</th><th>Student</th><th>Notebook</th><th>Video</th><th>Status</th><th>Needs attention</th></tr></thead><tbody>${rows}</tbody></table></div>` : `<div class="note">No submissions found in this folder. Open the folder that contains the students' files.</div>`}
-    ${st.rubric ? `<div class="actions"><button class="btn primary" data-step="2">Next: grading</button></div>` : `<div class="note">Choose a rubric to start grading. <button class="btn" data-step="0" style="justify-self:start">Go to Rubric</button></div>`}`;
+  return `<div class="topbar"><span class="brand">EasyGrade</span>
+    <span class="where" title="${esc(st && st.folder)}">${st && st.folder ? esc(st.folder) : ""}</span>
+    <span class="right">${aiOn() ? `<span class="pill ai" title="Notebook text and charts are sent to the AI service for grading. Videos never leave this computer.">AI grading on</span>` : `<span class="pill" title="Files are read and processed on this computer">Runs locally</span>`}
+    <button class="btn small" data-act="settings">Settings</button></span></div>`;
 }
 
-function viewGrading() {
-  const st = S.state, g = S.grading, r = st.rubric;
-  const nbPts = r.criteria.filter((c) => c.source === "notebook").reduce((a, c) => a + c.points, 0);
-  const otherPts = r.total_points - nbPts;
-  const pending = st.students.filter((s) => s.status === "pending" && s.has_notebook);
-  const withNb = st.students.filter((s) => s.has_notebook);
-  const run = g ? `<div style="display:grid;gap:6px"><div class="progress"><i style="width:${Math.round((g.done / Math.max(g.total, 1)) * 100)}%"></i></div>
-      <span class="muted num">${g.done} of ${g.total}${g.current.length ? " · grading " + esc(g.current.join(", ")) : ""}${g.tokens ? ` · ${g.tokens.toLocaleString()} tokens so far` : ""}${g.stop ? " · stopping after the current students…" : ""}</span></div>` : "";
-  const last = S.lastRun ? `<div class="note"><b>Last run: ${S.lastRun.ok} graded${S.lastRun.skipped ? `, ${S.lastRun.skipped} skipped` : ""}${S.lastRun.failed.length ? `, ${S.lastRun.failed.length} failed` : ""}.</b>
-      ${S.lastRun.tokens ? `<span class="hint">${S.lastRun.tokens.toLocaleString()} tokens used. Your API console shows the exact cost.</span>` : ""}
-      ${S.lastRun.failed.map((f) => `<div class="fail">${esc(f.name)}: ${esc(f.error)}</div>`).join("")}</div>` : "";
-  const ai = st.ai_ready
-    ? `<div class="note"><b>AI grades the notebook criteria (${fmt(nbPts)} of ${fmt(r.total_points)} points).</b>
-        <p>${otherPts ? `The video criteria (${fmt(otherPts)} points) aren't graded by AI yet; score them yourself in Review.` : ""} Each student's request is saved in <span class="mono">_grading/ai_log/</span> so you can see exactly what was sent.</p></div>
-       <div class="actions">
-        <button class="btn primary" data-act="ai-grade" ${g || !pending.length ? "disabled" : ""}>Grade ${pending.length} ungraded notebook${pending.length === 1 ? "" : "s"} with AI</button>
-        <button class="btn" data-act="ai-grade-all" ${g || !withNb.length ? "disabled" : ""}>Re-grade all ${withNb.length}</button>
-        ${g ? `<button class="btn" data-act="stop" ${g.stop ? "disabled" : ""}>Stop</button>` : ""}
-       </div>`
-    : `<div class="note warn"><b>AI grading needs an API key.</b><p>Add it in Settings. Until then, score by hand in Review.</p><div class="actions"><button class="btn primary" data-act="settings">Open Settings</button></div></div>`;
-  return `<div class="head"><div><h2>3 · Grading</h2><p class="lede">The AI drafts a score, a reason and evidence for each criterion. Nothing is final until you approve it in Review. Scores you already changed are kept when you re-grade.</p></div></div>
-    ${ai}${run}${last}
-    <div class="tbl-wrap"><table><thead><tr><th>Student</th><th>Status</th><th class="r">Total</th><th>Flags</th></tr></thead><tbody>
-    ${st.students.map((s) => `<tr><td>${esc(s.name || s.id)}</td><td><span class="chip st-${s.status}">${esc(s.status_label)}</span></td><td class="r num">${s.total == null ? (Object.keys(s.scores).length ? "partly scored" : "—") : fmt(s.total) + " / " + fmt(r.total_points)}</td><td class="muted">${s.flags.length || ""}</td></tr>`).join("")}
-    </tbody></table></div>
-    <details class="tools"><summary>Testing tools</summary><div class="actions" style="margin-top:8px">
-      <button class="btn" data-act="simulate" ${g ? "disabled" : ""}>Fill everyone with simulated scores</button>
-      <span class="hint">Made-up scores for trying the workflow. Don't use on real grading.</span></div></details>
-    <div class="actions"><button class="btn primary" data-step="3">Next: review</button></div>`;
+// ---------------------------------------------------------------------------
+// Screen 1: start a batch
+// ---------------------------------------------------------------------------
+function rubricOptions() {
+  const opts = S.rubrics.map((r) => ({ value: r.file, label: `${r.assignment} · ${fmt(r.points)} points · ${plural(r.criteria, "category", "categories")}` }));
+  const cur = S.state && S.state.rubric;
+  if (cur && !S.rubrics.some((r) => r.assignment === cur.assignment)) opts.unshift({ value: "current", label: `${rubricLine(cur).replace(/&amp;/g, "&")} (current)` });
+  return opts;
+}
+function viewStart() {
+  const st = S.state, hasFolder = !!(st && st.folder), cur = st && st.rubric;
+  const opts = rubricOptions();
+  const mt = S.matches;
+  const nb = hasFolder ? st.students.filter((s) => s.has_notebook).length : 0;
+  const vids = hasFolder ? st.students.filter((s) => s.has_video).length + (mt ? mt.unmatched.filter((f) => f.kind === "video" && !f.assigned_to).length : 0) : 0;
+  const loose = mt ? mt.unmatched.filter((f) => !f.assigned_to).length : 0;
+  const graded = hasFolder && st.counts ? st.counts.graded + st.counts.approved : 0;
+  const warn = S.replaceWarn ? `<div class="note-box warn"><b>This assignment already has scores.</b><span>${esc(S.replaceWarn)}</span><div class="actions"><button class="btn small primary" data-act="replace-anyway">Replace the rubric anyway</button><button class="btn small" data-act="keep-rubric">Keep the current rubric</button></div></div>` : "";
+  const privacy = aiOn()
+    ? "AI grading is on: the notebook text and charts are sent to the AI service. Videos never leave this computer."
+    : "Everything runs on this computer. Videos never leave it. Turn on AI grading in Settings to have notebooks graded by Claude.";
+  return `<section class="start" aria-labelledby="start-title">
+    <h1 id="start-title">Grade a new batch</h1>
+    <p class="lead">Choose the rubric and the folder that holds this batch's submissions. EasyGrade suggests a grade for each team, and you review them before anything is saved.</p>
+    <div class="panel">
+      <div class="field">
+        <label for="rubric">Rubric</label>
+        <div class="rubric-row">
+          <select id="rubric">${opts.length ? opts.map((o) => `<option value="${esc(o.value)}" ${o.value === S.rubricPick ? "selected" : ""}>${esc(o.label)}</option>`).join("") : `<option value="">No rubric found</option>`}</select>
+          <button class="btn" data-act="toggle-replace" aria-expanded="${S.replaceOpen}" aria-controls="rubric-panel">Replace rubric</button>
+        </div>
+        ${S.usedNote ? `<span class="rubric-used">${esc(S.usedNote)}</span>` : ""}
+        ${warn}
+        ${S.replaceOpen ? replacePanel() : ""}
+        ${S.rubricPreview && !S.replaceOpen ? `<div class="preview"><span class="ok-line">✓ ${rubricLine(S.rubricPreview)}</span>${rubricTable(S.rubricPreview)}</div>` : ""}
+      </div>
+      <div class="field">
+        <span class="label">Submissions folder</span>
+        <div class="folder ${hasFolder ? "chosen" : ""}">
+          <span class="folder-icon" aria-hidden="true"></span>
+          <span class="folder-path" id="folder-path">${hasFolder ? esc(st.folder) : "No folder chosen"}</span>
+          <button class="btn" data-act="choose-folder">${hasFolder ? "Change folder" : "Choose folder"}</button>
+        </div>
+        <span class="hint">One folder with every notebook and video (the unzipped LMS download). EasyGrade matches them using the student names in the file names, and uses roster.csv for names if it finds one.</span>
+        ${hasFolder ? `<div class="preview" id="folder-preview"><span class="ok-line">Found ${plural(nb, "notebook")} and ${plural(vids, "video")} for ${plural(st.students.length, "team")}</span>
+          ${loose ? `<span class="warn-line">${plural(loose, "file")} doesn't name a student. You'll match ${loose === 1 ? "it" : "them"} on the next step.</span>` : ""}
+          ${graded ? `<span class="ok-line">${plural(graded, "team")} already graded in this folder.</span>` : ""}</div>` : ""}
+      </div>
+      <p class="privacy"><span aria-hidden="true">●</span><span>${esc(privacy)}</span></p>
+      <div class="start-actions">
+        <button class="link-btn" data-act="use-sample">Use the sample folder (10 fake teams)</button>
+        <span class="actions">${graded ? `<button class="btn" data-act="to-review">Go to review (${graded})</button>` : ""}<button class="btn primary" data-act="continue" ${hasFolder && S.rubricPick ? "" : "disabled"}>Continue</button></span>
+      </div>
+    </div>
+  </section>`;
+}
+function replacePanel() {
+  const p = S.pending;
+  return `<div class="rubric-panel" id="rubric-panel">
+    <span class="panel-title">Upload the new rubric</span>
+    <span class="hint">An Excel or CSV file made from the EasyGrade rubric template (one row per category level, with its points), or a rubric .json. You'll see what was read before it's used.</span>
+    <div class="folder ${p ? "chosen" : ""}"><span class="folder-path">${p ? esc(p.name) : "No file chosen"}</span><button class="btn small" data-act="pick-rubric-file">Choose file…</button></div>
+    <span class="actions"><button class="link-btn" data-act="save-template">Save the Excel template…</button></span>
+    ${p ? `<div class="preview"><span class="ok-line">✓ Read ${plural(p.criteria.length, "category", "categories")}. The points add up to ${fmt(p.total_points)}.</span>${rubricTable(p)}</div>` : ""}
+    <div class="start-actions"><button class="link-btn" data-act="cancel-replace">Cancel</button><button class="btn primary" data-act="use-pending" ${p ? "" : "disabled"}>Use this rubric</button></div>
+  </div>`;
 }
 
+// ---------------------------------------------------------------------------
+// Screen 2: check the matches
+// ---------------------------------------------------------------------------
+function matchRow(t) {
+  const m = S.matches;
+  const loose = m.unmatched.filter((f) => f.kind === "video");
+  const needs = t.status === "needs";
+  let videoCell;
+  if (t.video && t.status !== "by_you") videoCell = `<span class="fname">${esc(t.video)}</span>`;
+  else videoCell = `<label style="position:absolute;left:-9999px" for="pick-${esc(t.id)}">Video for ${esc(t.name)}</label>
+    <select id="pick-${esc(t.id)}" data-pick="${esc(t.id)}">
+      <option value="" ${t.status === "needs" ? "selected" : ""}>${t.video ? "Matched by you. Undo…" : "Not found. Choose a video…"}</option>
+      ${loose.map((f) => `<option value="file:${esc(f.path)}" ${t.video && f.name === t.video ? "selected" : ""}>${esc(f.name)} (doesn't name a student)</option>`).join("")}
+      <option value="none" ${t.status === "no_video" ? "selected" : ""}>No video for this team</option></select>`;
+  const status = {
+    ok: `<span class="m-status ok">✓ Matched by name</span>`,
+    by_you: `<span class="m-status ok">✓ Matched by you</span>`,
+    needs: `<span class="m-status warn">Needs you</span>`,
+    no_video: `<span class="m-status muted">No video: you'll score the presentation</span>`,
+    no_notebook: `<span class="m-status warn">No notebook: you'll score it by hand</span>`,
+  }[t.status];
+  return `<div class="m-row ${needs ? "needs" : ""}">
+    <div class="m-who"><b>${t.members.map(esc).join(" &amp; ")}</b><span class="team-id">${esc(t.id)}${t.late ? " · late" : ""}</span></div>
+    <div class="m-files">
+      <div class="m-file"><span class="ftype">Notebook</span>${t.notebook ? `<span class="fname">${esc(t.notebook)}</span>` : `<span class="missing">Not found</span>`}</div>
+      <div class="m-file"><span class="ftype">Video</span>${videoCell}</div>
+    </div>${status}</div>`;
+}
+function viewMatch() {
+  const m = S.matches, st = S.state;
+  if (!m) return `<section class="start"><p class="muted">Looking at the folder…</p></section>`;
+  const graded = st.counts.graded + st.counts.approved;
+  const modes = [
+    ["ai", "Grade the notebooks with AI", aiOn() ? "Claude drafts a score, a reason and evidence for each notebook category." : "Needs an API key. Add it in Settings first.", !aiOn()],
+    ["sim", "Fill in made-up scores (testing only)", "To try the workflow without an API key. Don't use these for real grading.", false],
+    ["hand", "I'll score everything by hand", "Nothing is suggested; you enter every score in the review.", false],
+  ];
+  if (!S.mode) S.mode = aiOn() ? "ai" : "sim";
+  return `<section class="start wide" aria-labelledby="match-title">
+    <h1 id="match-title">Check the matches</h1>
+    <p class="lead">EasyGrade matched each notebook to its video using the student names in the file names. Fix anything that looks wrong before grading.</p>
+    <div class="panel">
+      <div class="match-summary"><span class="ok-line">${m.matched} of ${m.teams.length} teams matched automatically or by you</span>${m.needs ? `<span class="warn-line">${m.needs} need${m.needs === 1 ? "s" : ""} you</span>` : `<span class="ok-line">All set</span>`}</div>
+      <div class="match-list">${m.teams.map(matchRow).join("") || `<div class="empty">No submissions found in this folder. Open the folder that contains the students' files.</div>`}</div>
+      <p class="hint" style="margin:0">Files that don't name a student are listed in the video menus so you can assign them. Nothing is graded until you start.</p>
+      <fieldset class="mode"><legend>How should the grades be suggested?</legend>
+        ${modes.map(([v, t, d, dis]) => `<label><input type="radio" name="mode" value="${v}" ${S.mode === v ? "checked" : ""} ${dis ? "disabled" : ""}><span>${t}<small>${d}${dis ? ` <button class="link-btn" type="button" data-act="settings">Open Settings</button>` : ""}</small></span></label>`).join("")}
+        ${graded ? `<label class="check"><input type="checkbox" id="regrade" ${S.regrade ? "checked" : ""}><span>Also grade teams that already have grades<br><span class="hint">Scores you changed by hand are kept.</span></span></label>` : ""}
+      </fieldset>
+      <div class="start-actions">
+        <button class="link-btn" data-act="back-start">Back</button>
+        <span class="actions">${graded ? `<button class="btn" data-act="to-review">Go to review (${graded})</button>` : ""}<button class="btn primary" data-act="start-grading" ${m.needs || !m.teams.length ? "disabled" : ""}>Start grading</button></span>
+      </div>
+    </div>
+  </section>`;
+}
+
+// ---------------------------------------------------------------------------
+// Screen 3: progress
+// ---------------------------------------------------------------------------
+function viewRun() {
+  const r = S.run;
+  if (!r) return "";
+  const N = r.total;
+  const done = r.steps.reduce((sum, s) => sum + (s.state === "done" || s.state === "skip" ? N : s.n), 0);
+  const pct = Math.round((100 * done) / (r.steps.length * Math.max(N, 1)));
+  return `<section class="start" aria-labelledby="run-title">
+    <h1 id="run-title">${r.finished ? `Done: ${plural(N, "team")} ${N === 1 ? "is" : "are"} ready for your review` : `Grading ${plural(N, "team")}`}</h1>
+    <p class="lead">${r.finished ? esc(r.lead) : "This can take a few minutes for a full class. You can leave this window open."}</p>
+    <div class="panel">
+      <div class="run-bar" aria-hidden="true"><span style="width:${pct}%"></span></div>
+      <ol class="steps-run" aria-live="polite">${r.steps.map((s) => `<li><span class="state ${s.state}" aria-hidden="true">${s.state === "done" ? "✓" : s.state === "warn" ? "!" : s.state === "skip" ? "–" : ""}</span>
+        <span class="what">${esc(s.what)}<small>${esc(s.detail)}</small></span>
+        <span class="count num">${s.state === "waiting" ? "" : s.state === "skip" ? "Skipped" : `${s.n} of ${s.total ?? N}${s.extra ? " · " + esc(s.extra) : ""}`}</span></li>`).join("")}</ol>
+      ${r.found ? `<p class="found">${esc(r.found)}</p>` : ""}
+      ${r.failed.map((f) => `<div class="fail">${esc(f.name)}: ${esc(f.error)}</div>`).join("")}
+      ${r.tokens ? `<p class="hint">${r.tokens.toLocaleString()} tokens used. Your API console shows the exact cost.</p>` : ""}
+      <div class="start-actions"><span class="actions">${r.running ? `<button class="btn" data-act="stop" ${r.stop ? "disabled" : ""}>Stop</button>` : `<button class="link-btn" data-act="back-match">Back to matches</button>`}</span>
+        ${r.finished ? `<button class="btn primary" data-act="to-review" id="to-review">Review the grades</button>` : ""}</div>
+    </div>
+  </section>`;
+}
+
+// ---------------------------------------------------------------------------
+// Screen 4: review
+// ---------------------------------------------------------------------------
+function attnCell(r) {
+  return `<span class="attn ${r.check.length ? "" : "none"}">${r.check.length
+    ? `<span class="first" title="${esc(r.check[0])}">${esc(r.check[0])}</span>${r.check.length > 1 ? `<span class="more">+${r.check.length - 1} more</span>` : ""}`
+    : "Nothing to check"}</span>`;
+}
+function rowHtml(r) {
+  const open = !!S.open[r.id];
+  const gaps = r.criteria.filter((c) => c.final == null);
+  const approved = r.status === "approved";
+  const act = !r.complete
+    ? `<button class="review-btn" data-fill="${esc(r.id)}" title="Add the missing score first">Add missing score</button>`
+    : `<button class="review-btn ${approved ? "done" : ""}" data-review="${esc(r.id)}">${approved ? "Reviewed ✓" : "Mark reviewed"}</button>`;
+  const head = `<div class="row">
+    <button class="open-btn" data-toggle="${esc(r.id)}" aria-expanded="${open}" aria-controls="d-${esc(r.id)}"><span class="chev" aria-hidden="true">›</span>
+      <span><span class="names">${r.members.length ? r.members.map(esc).join(" &amp; ") : esc(r.id)}</span><br><span class="team-id">${esc(r.id)}${r.late ? " · late" : ""}</span></span></button>
+    ${gaps.length ? `<span class="grade num">${fmt(r.total)} <small>so far</small><br><span class="tag warn" style="font-size:12px">Incomplete</span></span>` : `<span class="grade num">${fmt(r.total)} <small>/ ${fmt(r.points)}</small></span>`}
+    ${attnCell(r)}
+    <span class="ai-cell"><span class="tag clear" title="The AI-usage check isn't connected yet, so nothing was checked">Not checked</span></span>
+    ${act}</div>`;
+  return `<div class="team" role="listitem">${head}${open ? detailsHtml(r) : ""}</div>`;
+}
+function detailsHtml(r) {
+  const editing = !!S.editing[r.id];
+  const diff = r.changed_by;
+  const ex = (x) => x ? `<span>${x === r.strongest ? "Strongest" : "Weakest"}: <b>${esc(x.name)}</b> <span class="num">${fmt(x.score)}/${fmt(x.max)}</span></span>` : "";
+  return `<div class="details" id="d-${esc(r.id)}">
+    <div class="overall"><span class="label">Overall</span><p>${esc(r.overall)}</p>
+      <div class="extremes">${ex(r.strongest)}${r.weakest && r.weakest !== r.strongest ? ex(r.weakest) : ""}</div></div>
+    <div>
+      <h3>What to check</h3>
+      ${r.check.length ? `<ul class="bullets">${r.check.map((c) => `<li>${esc(c)}</li>`).join("")}</ul>` : `<p class="cat-why">Nothing to check.</p>`}
+      <h3>AI usage</h3>
+      <div class="ai-box clear">Not checked yet. The AI-usage check isn't connected, so no signals are shown. It never changes a grade.</div>
+      <h3>Evidence</h3>
+      <div class="det-actions"><button class="btn small" data-ev-open="${esc(r.id)}|notebook" ${r.has_notebook ? "" : "disabled"}>Open the notebook</button><button class="btn small" data-ev-open="${esc(r.id)}|video" ${r.has_video ? "" : "disabled"}>Watch the video</button></div>
+      <h3>Feedback to the student <span>· saved when you click away</span></h3>
+      <textarea rows="3" data-fb="${esc(r.id)}" placeholder="A short note the student will see">${esc(r.feedback)}</textarea>
+    </div>
+    <div>
+      <h3>How the grade adds up <span>· ${fmt(r.total)} of ${fmt(r.points)}</span></h3>
+      <div class="cats">${r.criteria.map((c) => critHtml(r, c, editing)).join("")}</div>
+      <div class="change-row">
+        ${editing ? `<button class="link-btn" data-done="${esc(r.id)}">Done changing</button><button class="link-btn" data-reset="${esc(r.id)}">Reset to suggestion</button>` : `<button class="link-btn" data-edit="${esc(r.id)}">Change a score</button>`}
+        ${diff ? `<span class="changed num">${diff > 0 ? "+" : ""}${fmt(diff)} from the suggestion</span>` : ""}
+      </div>
+    </div></div>`;
+}
+function critHtml(r, c, editing) {
+  const s = c.final;
+  const input = editing || s == null;
+  const label = s == null ? `<span style="color:var(--warn);font-weight:600">Needs your score</span>` : esc(c.level || "");
+  const low = c.confidence != null && c.confidence < 0.7;
+  return `<div>
+    <div class="cat-top"><span class="cat-name">${esc(c.name)}</span>
+      <span class="cat-score num">${input
+        ? `<label for="in-${esc(r.id)}-${esc(c.id)}" style="position:absolute;left:-9999px">${esc(c.name)} score</label><input id="in-${esc(r.id)}-${esc(c.id)}" type="number" min="0" max="${c.points}" step="0.5" value="${s ?? ""}" placeholder="—" data-score="${esc(r.id)}|${esc(c.id)}">`
+        : `<b>${fmt(s)}</b>`} / ${fmt(c.points)} · ${label}</span></div>
+    <div class="bar" aria-hidden="true"><span style="width:${s == null ? 0 : Math.round((100 * s) / c.points)}%"></span></div>
+    ${c.reason ? `<p class="cat-why">${esc(c.reason)}</p>` : s == null ? `<p class="cat-why">${c.source === "video" && !r.has_video ? "No video, so this is yours to score." : "Not scored yet."}</p>` : c.ai_score == null ? `<p class="cat-why">Entered by you.</p>` : ""}
+    <p class="cat-ev">${c.evidence.map((e) => `<button class="ev" data-ev="${esc(e)}" data-evid="${esc(r.id)}">${esc(e)}</button>`).join("")}${c.confidence != null ? `<span>${Math.round(c.confidence * 100)}% sure${low ? " · check this" : ""}</span>` : ""}${c.changed ? `<span class="changed">changed from ${fmt(c.ai_score)}</span>` : ""}</p>
+    ${s != null && (editing || c.changed || c.comment) ? `<textarea class="cmt" rows="2" data-cmt="${esc(r.id)}|${esc(c.id)}" placeholder="Why you changed it (goes in the student's feedback)">${esc(c.comment)}</textarea>` : ""}
+  </div>`;
+}
+function exportNoteHtml() {
+  const n = S.exportNote;
+  if (!n) return "";
+  const refused = Object.keys(n.refused || {}).length;
+  return `<div class="note-box export-note"><b>${n.title}</b>
+    <span>${esc(n.text)}</span>${n.file ? `<span class="path">${esc(n.file)}</span>` : ""}
+    ${refused ? `<span class="fail">${plural(refused, "team")} the export check refused: ${esc(Object.entries(n.refused).map(([id, why]) => id + " (" + why[0] + ")").join("; "))}</span>` : ""}
+    ${(n.lines || []).length ? `<span class="path" style="white-space:pre-wrap">${n.lines.map(esc).join("\n")}</span>` : ""}
+    <span class="actions"><button class="btn small" data-act="show">${isMac ? "Show in Finder" : "Open folder"}</button></span></div>`;
+}
+function viewReview() {
+  const rv = S.review;
+  if (!rv) return `<p class="muted">Nothing to review yet.</p>`;
+  const rows = sortedRows();
+  const reviewed = rv.counts.approved, left = rv.counts.total - reviewed;
+  const st = S.state;
+  return `<div class="head"><div><h1>${esc(rv.rubric.assignment)}</h1>
+      <div class="sub"><span class="num">${reviewed}</span> of ${rv.counts.total} teams reviewed · Graded with the ${esc(rv.rubric.assignment)} rubric</div></div>
+      <span class="actions"><button class="link-btn" data-act="back-match">Back to matches</button><button class="link-btn" data-act="new-batch">Start a new batch</button></span></div>
+    <ol class="steps" aria-label="How to review">
+      <li><b>1</b>Open a team to see why it got its grade</li><li><b>2</b>Change a score if you disagree</li><li><b>3</b>Mark it reviewed. Only reviewed teams go into the Excel</li></ol>
+    <div class="list" role="list"><div class="cols" aria-hidden="true"><span>Students</span><span>Grade</span><span>Needs your attention</span><span>AI usage</span><span></span></div>
+      <div id="teams">${rows.map(rowHtml).join("") || `<div class="empty">No teams in this folder.</div>`}</div></div>
+    ${exportNoteHtml()}
+    <div class="foot"><span class="muted">${left ? `${plural(left, "team")} not reviewed yet will be left out of the files.` : "All teams reviewed."}</span>
+      <div class="foot-actions"><button class="btn" data-act="export-csv" ${reviewed ? "" : "disabled"}>Download CSV</button><button class="btn primary" data-act="export-excel" ${reviewed ? "" : "disabled"}>Download Excel</button></div></div>
+    <details class="more"><summary>More exports</summary><div class="actions" style="margin-top:10px">
+      <button class="btn small" data-act="export-all">Export everything (Excel summary, gradebook CSV, feedback files)</button>
+      <label class="check"><input type="checkbox" id="incl" ${S.includeUnapproved ? "checked" : ""}> Include grades that aren't reviewed in gradebook.csv</label></div>
+      <p class="hint" style="margin-top:8px">This writes the older full export into the <span class="mono">_grading</span> folder. Put the LMS gradebook export there as <span class="mono">lms_gradebook.csv</span> to also get a file ready to import back.</p></details>`;
+}
+
+// ---------------------------------------------------------------------------
+// Evidence drawer and Settings
+// ---------------------------------------------------------------------------
+function notebookHTML(d) {
+  const nb = d.notebook;
+  if (!d.notebook_name) return `<div class="empty">No notebook in this submission.</div>`;
+  if (nb.error) return `<div class="empty">${esc(nb.error)}</div>`;
+  return nb.cells.map((c) => {
+    const outs = c.outputs.map((o) => o.kind === "image" ? `<img alt="Cell ${c.n} output" src="${esc(o.src)}">` : `<div class="out${o.kind === "error" ? " err" : ""}">${esc(o.text)}</div>`).join("");
+    const body = c.type === "markdown" ? `<div class="md">${esc(c.source)}</div>` : `<pre>${esc(c.source)}</pre>${outs}`;
+    return `<div class="cell${S.ev.hl === c.n ? " hl" : ""}" id="cell-${c.n}"><div class="in">#${c.n}${c.type === "code" ? `<br>[${c.count ?? " "}]` : ""}</div><div style="min-width:0">${body}</div></div>`;
+  }).join("");
+}
+function videoHTML(d) {
+  if (!d.video_url) return `<div class="empty">${d.video_name ? "The video file can't be opened." : "No video in this submission."}</div>`;
+  return `<video id="vid" controls preload="metadata" src="${esc(d.video_url)}"></video><p class="muted" style="font-size:13px">${esc(d.video_name)}. The transcript will show here once video grading is connected.</p>`;
+}
+function viewDrawer() {
+  const e = S.ev;
+  if (!e) return "";
+  const d = e.data;
+  const fname = e.tab === "notebook" ? d.notebook_name : d.video_name;
+  return `<div class="drawer-bg" data-act="close-drawer"></div>
+    <aside class="drawer" role="dialog" aria-modal="true" aria-label="Evidence for ${esc(d.name || d.id)}">
+      <div class="drawer-top"><h2>${esc(d.name || d.id)}</h2><button class="btn small" data-act="close-drawer">Close</button></div>
+      <div class="tabs" role="tablist"><button class="tab" role="tab" data-tab="notebook" aria-selected="${e.tab === "notebook"}">Notebook</button><button class="tab" role="tab" data-tab="video" aria-selected="${e.tab === "video"}">Video</button><span class="file" title="${esc(fname || "")}">${esc(fname || "")}</span></div>
+      <div class="ev-body" id="evbody">${e.tab === "notebook" ? notebookHTML(d) : videoHTML(d)}</div></aside>`;
+}
 function viewSettings() {
   const t = S.settings;
   if (!t) return "";
@@ -365,191 +639,144 @@ function viewSettings() {
       <input type="text" id="set-model" value="${esc(t.model)}" spellcheck="false">
       <span class="hint">The model name from your API console, for example claude-sonnet-5-5.</span></div>
     <label class="check"><input type="checkbox" id="set-anon" ${t.anonymize ? "checked" : ""}><span><b>Remove names before sending</b><br><span class="hint">Replaces the student's full name, ID and email in the notebook with [STUDENT]. First names written alone aren't caught.</span></span></label>
-    <label class="check"><input type="checkbox" id="set-img" ${t.send_images ? "checked" : ""}><span><b>Send chart images</b><br><span class="hint">Lets the AI see the charts (better grading of analysis criteria, slightly higher cost).</span></span></label>
+    <label class="check"><input type="checkbox" id="set-img" ${t.send_images ? "checked" : ""}><span><b>Send chart images</b><br><span class="hint">Lets the AI see the charts (better grading of analysis categories, slightly higher cost).</span></span></label>
     <p class="hint">What gets sent: the rubric and the notebook (code, outputs, charts). Videos never leave this computer. Each request is saved in <span class="mono">_grading/ai_log/</span>.</p>
     <div class="actions"><button class="btn primary" data-act="save-settings">Save</button><button class="btn" data-act="test-connection" ${t.has_key ? "" : "disabled"}>Test connection</button>${t.has_key && t.key_source === "settings" ? `<button class="btn" data-act="remove-key">Remove key</button>` : ""}<button class="btn" data-act="close-settings" style="margin-left:auto">Close</button></div>
   </div></div>`;
 }
 
-// ----- Review: three parts that update independently (so the video keeps playing)
-function viewReview() {
-  if (!S.state.students.length) return `<div class="note">No students in this folder.</div>`;
-  return `<div class="head"><div><h2>4 · Review</h2><p class="lede">Check each draft next to its evidence. Click an evidence chip to jump to that cell or video moment. Click a level to change a score; changes are tracked and show in red in the export.</p></div></div>
-    <div class="review"><div class="queue" id="queue" role="listbox" aria-label="Students">${queueHTML()}</div>
-    <div class="panel" id="evidence">${evidenceHTML()}</div>
-    <div class="scorecol" id="scorecol">${scoreHTML()}</div></div>`;
-}
-function queueHTML() {
-  return S.state.students.map((x) => `<button class="qitem" role="option" data-sel="${esc(x.id)}" aria-selected="${x.id === S.sel}"><span class="nm">${esc(x.name || x.id)}</span><span class="tt num">${fmt(x.total)}</span><span class="chip st-${x.status}">${esc(x.status_label)}</span></button>`).join("");
-}
-function notebookHTML(d) {
-  const nb = d.notebook;
-  if (!d.notebook_name) return `<div class="empty">No notebook in this submission.</div>`;
-  if (nb.error) return `<div class="empty">${esc(nb.error)}</div>`;
-  return nb.cells.map((c) => {
-    const outs = c.outputs.map((o) => o.kind === "image" ? `<img alt="Cell ${c.n} output" src="${esc(o.src)}">` : `<div class="out${o.kind === "error" ? " err" : ""}">${esc(o.text)}</div>`).join("");
-    const body = c.type === "markdown" ? `<div class="md">${esc(c.source)}</div>` : `<pre>${esc(c.source)}</pre>${outs}`;
-    return `<div class="cell${S.hlCell === c.n ? " hl" : ""}" id="cell-${c.n}"><div class="in">#${c.n}${c.type === "code" ? `<br>[${c.count ?? " "}]` : ""}</div><div style="min-width:0">${body}</div></div>`;
-  }).join("");
-}
-function videoHTML(d) {
-  if (!d.video_url) return `<div class="empty">${d.video_name ? "The video file can't be opened." : "No video in this submission."}${d.flags.some((f) => /link/i.test(f)) ? "<br>The student sent a link. Download the video into their folder, then scan again." : ""}</div>`;
-  return `<video id="vid" controls preload="metadata" src="${esc(d.video_url)}"></video>
-    <p class="muted" style="font-size:12px">${esc(d.video_name)}. The transcript will show here once video grading is connected.</p>`;
-}
-function evidenceHTML() {
-  const d = S.student;
-  if (!d) return `<div class="empty">Choose a student.</div>`;
-  const fname = S.evTab === "notebook" ? d.notebook_name : d.video_name;
-  return `<div class="tabs" role="tablist"><button class="tab" role="tab" data-tab="notebook" aria-selected="${S.evTab === "notebook"}">Notebook</button><button class="tab" role="tab" data-tab="video" aria-selected="${S.evTab === "video"}">Video</button><span class="file" title="${esc(fname || "")}">${esc(fname || "")}</span></div>
-    <div class="panel-body" id="evbody">${S.evTab === "notebook" ? notebookHTML(d) : videoHTML(d)}</div>`;
-}
-function scoreHTML() {
-  const d = S.student;
-  if (!d) return "";
-  const missing = d.criteria.filter((c) => c.final == null).length;
-  const nothing = !d.notebook_name && !d.video_name;
-  return `<div class="scorecard">
-    ${d.flags.map((f) => `<div class="flagline">${esc(f)}</div>`).join("")}
-    ${nothing ? `<div class="note">Nothing was submitted. Score it by hand (e.g. all zeros) to include it in the export.</div>` : ""}
-    ${d.criteria.map((c) => {
-      const low = c.confidence != null && c.confidence < 0.7;
-      return `<div class="crit${low ? " low" : ""}">
-        <div class="crit-top"><h3>${esc(c.name)}</h3><span class="chip src-${c.source}">${SRC[c.source]}</span></div>
-        <div class="seg" role="group" aria-label="Score for ${esc(c.name)}">${c.levels.map((l) => `<button data-score="${esc(c.id)}|${l[0]}" aria-pressed="${c.final === l[0]}" title="${esc(l[1] + ": " + l[2])}">${fmt(l[0])}${l[0] === c.ai_score ? '<span class="ai">AI</span>' : ""}</button>`).join("")}<span class="muted mono" style="font-size:12px">/ ${fmt(c.points)}</span></div>
-        ${c.reason ? `<p style="font-size:13px">${esc(c.reason)}</p>` : c.final == null ? `<p class="muted" style="font-size:13px">Not scored yet.</p>` : ""}
-        <div class="meta">${c.evidence.map((e) => `<button class="chip ev" data-ev="${esc(e)}">${esc(e)}</button>`).join("")}${c.confidence != null ? `<span>${Math.round(c.confidence * 100)}% sure</span>` : ""}${low ? '<span class="chip st-graded">check this</span>' : ""}${c.changed ? `<span class="changed">changed from ${fmt(c.ai_score)}</span>` : ""}</div>
-        ${c.final != null && (c.changed || c.comment) ? `<textarea rows="2" data-cmt="${esc(c.id)}" placeholder="Why you changed it (goes in the student's feedback)">${esc(c.comment)}</textarea>` : ""}
-      </div>`;
-    }).join("")}
-    <div><h3 style="margin-bottom:4px">Feedback to student</h3><textarea rows="3" data-fb="1">${esc(d.feedback)}</textarea></div>
-    <div class="totalbar"><div><b>${fmt(d.total)} / ${fmt(d.points)}</b> ${missing ? `<span class="muted">${missing} left to score</span>` : `<span class="muted">${Math.round((d.total / d.points) * 100)}%</span>`}</div>
-      ${d.status === "approved" ? `<span class="chip st-approved">Approved</span><button class="btn" data-act="reopen">Reopen</button>` : `<button class="btn primary" data-act="approve" ${missing ? "disabled" : ""}>Approve and go to next</button>`}</div>
-  </div>`;
-}
-function renderReviewParts(parts) {
-  if (S.step !== 3 || !$("#queue")) return render();
-  if (parts.includes("queue")) $("#queue").innerHTML = queueHTML();
-  if (parts.includes("evidence")) $("#evidence").innerHTML = evidenceHTML();
-  if (parts.includes("score")) $("#scorecol").innerHTML = scoreHTML();
-  const rail = document.querySelector(".rail");
-  if (rail) rail.querySelectorAll(".step .s").forEach((el, i) => (el.textContent = stepsInfo()[i].s));
-}
-
-function viewExport() {
-  const st = S.state, r = st.rubric, c = st.counts;
-  const head = `<tr><th>ID</th><th>Name</th><th>Status</th>${r.criteria.map((x) => `<th class="r" title="${esc(x.name)}">${esc(x.name.split(" ")[0])} (${fmt(x.points)})</th>`).join("")}<th class="r">Total</th></tr>`;
-  const rows = st.students.map((s) => `<tr class="${s.status !== "approved" ? "unapproved" : ""}"><td class="mono num">${esc(s.id)}</td><td style="white-space:nowrap">${esc(s.name)}</td><td style="white-space:nowrap">${esc(s.status_label)}</td>${r.criteria.map((x) => { const v = s.scores[x.id]; return `<td class="r num ${v && v.changed ? "chg" : ""}">${v && v.final != null ? fmt(v.final) : ""}</td>`; }).join("")}<td class="r num"><b>${s.total == null ? "" : fmt(s.total)}</b></td></tr>`).join("");
-  const res = S.exportResult;
-  return `<div class="head"><div><h2>5 · Export</h2><p class="lede">Writes everything to <span class="mono">_grading/</span>: grades.xlsx (summary, detail, feedback, flags, rubric), gradebook.csv, and one feedback file per student. Put the LMS gradebook export in that folder as <span class="mono">lms_gradebook.csv</span> to also get a file ready to import back.</p></div></div>
-    <div class="stats"><div class="stat"><b>${c.approved}</b><span>approved</span></div><div class="stat"><b>${c.graded}</b><span>need review</span></div><div class="stat"><b>${c.pending}</b><span>not graded</span></div></div>
-    <div class="actions"><label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="incl" ${S.includeUnapproved ? "checked" : ""}> Include grades that aren't approved in gradebook.csv</label></div>
-    <div class="actions"><button class="btn primary" data-act="export">Export all</button>${res ? `<button class="btn" data-act="show">${isMac ? "Show in Finder" : "Open folder"}</button>` : ""}</div>
-    ${res ? `<div class="note"><b>Exported</b><div class="result">${res.lines.map(esc).join("\n")}</div></div>` : ""}
-    <div class="tbl-wrap" style="max-height:420px">${"<table><thead>" + head + "</thead><tbody>" + rows + "</tbody></table>"}</div>
-    <p class="muted" style="font-size:12px">Yellow rows aren't approved. Red numbers were changed by you.</p>`;
-}
-
+// ---------------------------------------------------------------------------
+// Render
+// ---------------------------------------------------------------------------
 function render() {
   const root = $("#root");
-  if (!S.state) { root.className = "welcome"; root.innerHTML = `<p class="muted">Starting…</p>`; return; }
-  if (!S.state.folder) { root.className = "welcome"; root.innerHTML = viewWelcome(); return; }
-  root.className = "";
-  root.style.height = "100%";
-  const work = $("#work"), y = work ? work.scrollTop : 0;
-  const eb = $("#evbody"), ey = eb ? eb.scrollTop : 0;
-  root.innerHTML = viewShell() + viewSettings();
-  if ($("#work")) $("#work").scrollTop = y;
+  if (!S.state) { root.innerHTML = `<p class="muted">Starting…</p>`; return; }
+  const body = { start: viewStart, match: viewMatch, run: viewRun, review: viewReview }[S.view]();
+  const y = window.scrollY, ey = $("#evbody") ? $("#evbody").scrollTop : 0;
+  root.innerHTML = topbar() + body + viewDrawer() + viewSettings();
+  if (S.view !== "run") window.scrollTo(0, y);
   if ($("#evbody")) $("#evbody").scrollTop = ey;
 }
+function show(view) { S.view = view; render(); window.scrollTo(0, 0); }
 
 // ---------------------------------------------------------------------------
 // Actions
 // ---------------------------------------------------------------------------
-async function goStep(i) {
-  S.step = i;
-  if (i === 3) {
-    const sts = S.state.students;
-    if (!S.sel || !sts.some((s) => s.id === S.sel)) {
-      const first = sts.find((s) => s.status === "graded") || sts[0];
-      S.sel = first ? first.id : null;
-    }
-    if (S.sel) await loadStudent(S.sel);
+async function loadRubricChoices() {
+  const r = await call("list_rubrics");
+  S.rubrics = ok(r) ? r.rubrics : [];
+  const cur = S.state && S.state.rubric;
+  if (cur) S.rubricPick = S.rubrics.some((x) => x.assignment === cur.assignment) ? S.rubrics.find((x) => x.assignment === cur.assignment).file : "current";
+  else if (!S.rubricPick || !S.rubrics.some((x) => x.file === S.rubricPick)) {
+    const cap = S.rubrics.find((x) => /CAP3321C/i.test(x.assignment));
+    S.rubricPick = (cap || S.rubrics[0] || {}).file || null;
   }
-  render();
+  await loadRubricPreview();
+}
+async function loadRubricPreview() {
+  S.rubricPreview = null;
+  if (S.rubricPick === "current" && S.state.rubric) { S.rubricPreview = S.state.rubric; return; }
+  if (S.rubricPick) {
+    const p = await call("preview_builtin_rubric", S.rubricPick);
+    if (ok(p)) S.rubricPreview = p;
+  }
+}
+// Make the dropdown's rubric the one in use. Returns false if it couldn't (and shows why).
+async function applyRubricChoice(replace) {
+  const cur = S.state.rubric;
+  if (S.rubricPick === "current" || (cur && S.rubrics.some((x) => x.file === S.rubricPick && x.assignment === cur.assignment))) return true;
+  const r = await call("use_builtin_rubric", S.rubricPick, !!replace);
+  if (r && r.failed && /already has scores/.test(r.error)) { S.replaceWarn = r.error; render(); return false; }
+  if (!ok(r)) return false;
+  S.state = r; S.replaceWarn = null;
+  await refreshReview();
+  return true;
 }
 
-async function runSimulated() {
-  const list = S.state.students.filter((s) => s.has_notebook || s.has_video);
-  S.grading = { done: 0, total: list.length, current: [], tokens: 0 };
-  render();
-  for (const s of list) {
-    await callQuiet("grade_simulated", s.id);
-    S.grading.done++;
-    if (S.step === 2) render();
-  }
-  S.grading = null;
-  await refresh();
-  toast(`Filled ${list.length} students with simulated scores.`);
+async function goMatch() {
+  await refreshMatches();
+  show("match");
 }
 
-// Grade with AI, 3 students at a time. Stop finishes the ones in progress.
-async function runAI(all) {
-  const list = S.state.students.filter((s) => s.has_notebook && (all || s.status === "pending"));
-  S.grading = { done: 0, total: list.length, current: [], tokens: 0, stop: false };
-  const result = { ok: 0, skipped: 0, failed: [], tokens: 0 };
-  render();
-  let next = 0;
-  async function worker() {
-    while (next < list.length && !S.grading.stop) {
-      const s = list[next++];
-      const label = s.name || s.id;
-      S.grading.current.push(label);
-      if (S.step === 2) render();
-      const r = await callQuiet("grade_student", s.id);
-      S.grading.current = S.grading.current.filter((x) => x !== label);
-      if (r.failed) {
-        result.failed.push({ name: label, error: r.error });
-        // A bad key or model will fail for everyone: stop right away.
-        if (/API key|wasn't found|Settings/.test(r.error)) S.grading.stop = true;
-      } else if (r.skipped) result.skipped++;
-      else {
-        result.ok++;
-        const u = r.usage || {};
-        result.tokens += (u.input_tokens || 0) + (u.output_tokens || 0);
-        S.grading.tokens = result.tokens;
+async function runGrading() {
+  const rows = S.state.students;
+  const N = rows.length;
+  const mode = S.mode;
+  const run = S.run = {
+    total: N, running: true, finished: false, stop: false, failed: [], tokens: 0, found: "", lead: "",
+    steps: [
+      { what: "Finding each team's notebook and video", detail: "Looks inside the folder and the roster", state: "waiting", n: 0 },
+      { what: "Transcribing videos on this computer", detail: "Not connected yet: you'll score the presentation yourself", state: "waiting", n: 0 },
+      { what: "Reading the notebooks", detail: "Header, run order, errors and file name", state: "waiting", n: 0 },
+      { what: mode === "ai" ? "Suggesting grades with the AI" : mode === "sim" ? "Filling in made-up scores" : "Suggesting grades", detail: mode === "hand" ? "Skipped: you chose to score by hand" : "Every score comes with a reason", state: "waiting", n: 0 },
+    ],
+  };
+  show("run");
+  const draw = () => { if (S.view === "run") render(); };
+  // 1. files
+  run.steps[0].state = "running"; draw();
+  run.steps[0].n = N; run.steps[0].state = "done";
+  const noVideo = rows.filter((s) => !s.has_video).length;
+  const noNb = rows.filter((s) => !s.has_notebook).length;
+  run.found = `${plural(N, "team")} found. ${noVideo ? plural(noVideo, "team") + " ha" + (noVideo === 1 ? "s" : "ve") + " no video, so you'll add the presentation score yourself. " : "Every team has a video. "}${noNb ? plural(noNb, "team") + " ha" + (noNb === 1 ? "s" : "ve") + " no notebook. " : ""}`;
+  // 2. transcripts are not connected
+  run.steps[1].state = "skip"; draw();
+  // 3. notebook checks
+  run.steps[2].state = "running"; run.steps[2].total = rows.filter((s) => s.has_notebook).length; draw();
+  for (const s of rows.filter((x) => x.has_notebook)) {
+    if (run.stop) break;
+    await callQuiet("analyze_notebook", s.id);
+    run.steps[2].n++; draw();
+  }
+  run.steps[2].state = "done";
+  await refreshState();
+  // 4. grading
+  const fresh = (s) => S.regrade || s.status === "pending";
+  if (mode === "hand" || run.stop) { run.steps[3].state = "skip"; }
+  else {
+    const list = S.state.students.filter((s) => fresh(s) && (mode === "sim" ? (s.has_notebook || s.has_video) : s.has_notebook));
+    run.steps[3].state = "running"; run.steps[3].total = list.length; draw();
+    let next = 0;
+    const work = async () => {
+      while (next < list.length && !run.stop) {
+        const s = list[next++];
+        const r = await callQuiet(mode === "sim" ? "grade_simulated" : "grade_student", s.id);
+        if (r.failed) {
+          run.failed.push({ name: s.name || s.id, error: r.error });
+          if (/API key|wasn't found|Settings/.test(r.error)) run.stop = true;
+        } else if (r.usage) run.tokens += (r.usage.input_tokens || 0) + (r.usage.output_tokens || 0);
+        run.steps[3].n++; run.steps[3].extra = run.failed.length ? plural(run.failed.length, "failed") : ""; draw();
       }
-      S.grading.done++;
-      if (S.step === 2) render();
-    }
+    };
+    await Promise.all(mode === "ai" ? [work(), work(), work()] : [work()]);
+    run.steps[3].state = run.failed.length ? "warn" : "done";
   }
-  await Promise.all([worker(), worker(), worker()]);
-  S.grading = null;
-  S.lastRun = result;
-  await refresh();
-  if (result.failed.length) toast(`${result.failed.length} student(s) couldn't be graded. See the list in Grading.`, true);
-  else toast(`AI graded ${result.ok} notebook${result.ok === 1 ? "" : "s"}. They're waiting for you in Review.`);
+  run.running = false; run.finished = true;
+  await refreshAll();
+  const missing = S.review ? S.review.rows.filter((r) => !r.complete).length : 0;
+  run.lead = "Grades are suggestions until you mark each team reviewed." + (missing ? ` ${plural(missing, "team")} still need${missing === 1 ? "s" : ""} a score from you.` : "");
+  draw();
+  const b = $("#to-review"); if (b) b.focus();
 }
 
-async function openSettings() {
-  const t = await call("get_settings");
-  if (ok(t)) { S.settings = t; render(); setTimeout(() => { const k = $("#set-key"); if (k) k.focus(); }, 0); }
-}
-async function saveSettings() {
-  const key = $("#set-key").value.trim();
-  const values = { model: $("#set-model").value.trim(), anonymize: $("#set-anon").checked, send_images: $("#set-img").checked };
-  if (key) values.api_key = key;
-  const t = await call("save_settings", values);
-  if (ok(t)) { S.settings = t; await refresh(); toast("Settings saved."); }
+async function toReview() {
+  await refreshAll();
+  if (!S.review) { toast("Choose a rubric first.", true); return; }
+  const first = sortedRows().find((r) => r.status !== "approved");
+  S.open = first ? { [first.id]: true } : {};
+  show("review");
 }
 
-async function afterScoreChange() {
-  await loadStudent(S.sel);
-  const st = await call("get_state");
-  if (ok(st)) S.state = st;
-  renderReviewParts(["queue", "score"]);
+async function loadEvidence(id, tab, hl) {
+  const d = await call("get_student", id);
+  if (!ok(d)) return;
+  S.ev = { id, data: d, tab, hl: hl ?? null };
+  render();
+  if (hl) {
+    const el = $("#cell-" + hl), body = $("#evbody");
+    if (el && body) body.scrollTop += el.getBoundingClientRect().top - body.getBoundingClientRect().top - 12;
+  }
 }
-
 function seekVideo(sec) {
   const v = $("#vid");
   if (!v) return;
@@ -557,129 +784,192 @@ function seekVideo(sec) {
   if (v.readyState >= 1) go(); else v.addEventListener("loadedmetadata", go, { once: true });
 }
 
-async function onAct(act) {
+async function setScore(id, crit, value) {
+  const r = await call("set_score", id, crit, value);
+  if (ok(r)) { await refreshAll(); render(); }
+}
+
+async function onAct(act, el) {
   if (act === "choose-folder") {
     const st = await call("choose_folder");
-    if (ok(st)) { S.state = st; S.sel = null; S.student = null; S.exportResult = null; S.step = st.rubric ? 3 : 0; if (S.step === 3) return goStep(3); render(); }
-  } else if (act === "choose-rubric" || act === "replace-rubric") {
-    const st = await call("choose_rubric", act === "replace-rubric");
-    if (st && st.failed && /already has scores/.test(st.error)) { S.replaceWarn = st.error; render(); return; }
-    if (ok(st)) { S.state = st; S.replaceWarn = null; render(); toast("Rubric saved."); }
+    if (ok(st)) await afterFolder(st);
+  } else if (act === "use-sample") {
+    toast("Building the sample folder…");
+    const st = await call("create_sample_folder");
+    if (ok(st)) { await afterFolder(st); toast("Sample folder ready."); }
+  } else if (act === "toggle-replace") {
+    S.replaceOpen = !S.replaceOpen; if (!S.replaceOpen) S.pending = null; render();
   } else if (act === "cancel-replace") {
-    S.replaceWarn = null; render();
-  } else if (act === "sample-rubric") {
-    const st = await call("use_sample_rubric");
-    if (ok(st)) { S.state = st; render(); toast("Sample rubric loaded."); }
-  } else if (act === "template") {
+    S.replaceOpen = false; S.pending = null; render();
+  } else if (act === "pick-rubric-file") {
+    const p = await call("choose_rubric_preview");
+    if (ok(p)) { S.pending = p; render(); }
+  } else if (act === "save-template") {
     const r = await call("save_rubric_template");
     if (ok(r)) toast("Template saved: " + r.path);
-  } else if (act === "scan") {
-    const st = await call("scan");
-    if (ok(st)) { S.state = st; render(); toast(`Found ${st.students.length} students.`); }
-  } else if (act === "simulate") {
-    await runSimulated();
-  } else if (act === "ai-grade" || act === "ai-grade-all") {
-    await runAI(act === "ai-grade-all");
+  } else if (act === "use-pending") {
+    const p = S.pending; if (!p) return;
+    const r = await call("use_rubric", p.path, false);
+    if (r && r.failed && /already has scores/.test(r.error)) { S.replaceWarn = r.error; S.pendingUse = p.path; render(); return; }
+    if (ok(r)) { S.state = r; S.replaceOpen = false; S.pending = null; S.usedNote = `✓ Using the rubric from ${p.name}`; await loadRubricChoices(); await refreshReview(); render(); }
+  } else if (act === "replace-anyway") {
+    const path = S.pendingUse; S.replaceWarn = null;
+    const r = path ? await call("use_rubric", path, true) : null;
+    if (path && ok(r)) { S.state = r; S.replaceOpen = false; S.pending = null; S.pendingUse = null; S.usedNote = "✓ Rubric replaced. Grades will be suggested again."; await loadRubricChoices(); await refreshReview(); render(); }
+    else if (!path && await applyRubricChoice(true)) { await loadRubricChoices(); render(); }
+  } else if (act === "keep-rubric") {
+    S.replaceWarn = null; S.pendingUse = null; await loadRubricChoices(); render();
+  } else if (act === "continue") {
+    if (!(await applyRubricChoice(false))) return;
+    await goMatch();
+  } else if (act === "back-start") {
+    await refreshState(); await refreshMatches(); show("start");
+  } else if (act === "back-match") {
+    await goMatch();
+  } else if (act === "start-grading") {
+    await runGrading();
   } else if (act === "stop") {
-    if (S.grading) { S.grading.stop = true; render(); }
+    if (S.run) { S.run.stop = true; render(); }
+  } else if (act === "to-review") {
+    await toReview();
+  } else if (act === "new-batch") {
+    await refreshState(); await refreshMatches(); await loadRubricChoices(); show("start");
   } else if (act === "settings") {
-    await openSettings();
+    const t = await call("get_settings");
+    if (ok(t)) { S.settings = t; render(); setTimeout(() => { const k = $("#set-key"); if (k) k.focus(); }, 0); }
   } else if (act === "close-settings") {
     S.settings = null; render();
   } else if (act === "save-settings") {
-    await saveSettings();
+    const key = $("#set-key").value.trim();
+    const values = { model: $("#set-model").value.trim(), anonymize: $("#set-anon").checked, send_images: $("#set-img").checked };
+    if (key) values.api_key = key;
+    const t = await call("save_settings", values);
+    if (ok(t)) { S.settings = t; await refreshState(); render(); toast("Settings saved."); }
   } else if (act === "remove-key") {
     const t = await call("save_settings", { api_key: "" });
-    if (ok(t)) { S.settings = t; await refresh(); toast("API key removed."); }
+    if (ok(t)) { S.settings = t; await refreshState(); render(); toast("API key removed."); }
   } else if (act === "test-connection") {
     toast("Testing…");
     const r = await call("test_connection");
     if (ok(r)) toast(r.message);
-  } else if (act === "approve") {
-    const cur = S.sel;
-    if (!ok(await call("approve", cur))) return;
-    const st = await call("get_state");
-    if (ok(st)) S.state = st;
-    const next = S.state.students.find((s) => s.status === "graded" && s.id !== cur);
-    toast(next ? `Approved. Next: ${next.name || next.id}.` : "Approved. Nothing left to review.");
-    S.hlCell = null;
-    await loadStudent(next ? next.id : cur);
-    renderReviewParts(["queue", "evidence", "score"]);
-  } else if (act === "reopen") {
-    if (ok(await call("reopen", S.sel))) await afterScoreChange();
-  } else if (act === "export") {
+  } else if (act === "close-drawer") {
+    S.ev = null; render();
+  } else if (act === "export-excel" || act === "export-csv") {
+    const csv = act === "export-csv";
+    const r = await call("export_review", csv ? "csv" : "excel");
+    if (ok(r)) {
+      S.exportNote = { title: csv ? "CSV saved" : "Excel saved", file: r.file, refused: r.refused,
+        text: `${plural(r.teams, "team")} (${plural(r.rows, "row")}) written${r.left_out ? `; ${plural(r.left_out, "team")} not reviewed left out` : ""}. ${csv ? "One row per student, four columns." : "Tabs: Grades, Details and Rubric."}` };
+      render(); toast(csv ? "CSV saved." : "Excel saved.");
+    }
+  } else if (act === "export-all") {
     const r = await call("export_all", S.includeUnapproved);
-    if (ok(r)) { S.exportResult = r; render(); toast("Export finished."); }
+    if (ok(r)) { S.exportNote = { title: "Full export finished", file: r.folder, lines: r.lines, text: "Everything was written to the _grading folder." }; render(); toast("Export finished."); }
   } else if (act === "show") {
     await call("show_exports");
   }
 }
 
+async function afterFolder(st) {
+  S.state = st; S.replaceWarn = null; S.usedNote = ""; S.exportNote = null; S.open = {}; S.editing = {}; S.ev = null; S.mode = null;
+  await loadRubricChoices();
+  await refreshReview();
+  await refreshMatches();
+  show("start");
+}
+
 document.addEventListener("click", async (e) => {
   if (e.target.dataset && e.target.dataset.act === "close-settings-bg") { S.settings = null; return render(); }
-  const b = e.target.closest("button,[data-crit]");
+  const b = e.target.closest("button,[data-act]");
   if (!b || b.disabled) return;
   const d = b.dataset;
-  if (d.step != null) return goStep(+d.step);
-  if (d.crit) { S.openCrit = S.openCrit === d.crit ? null : d.crit; return render(); }
-  if (d.sel) { S.hlCell = null; await loadStudent(d.sel); return renderReviewParts(["queue", "evidence", "score"]); }
-  if (d.tab) { S.evTab = d.tab; return renderReviewParts(["evidence"]); }
-  if (d.score) {
-    const i = d.score.lastIndexOf("|");
-    if (ok(await call("set_score", S.sel, d.score.slice(0, i), Number(d.score.slice(i + 1))))) await afterScoreChange();
+  if (d.toggle) { S.open[d.toggle] = !S.open[d.toggle]; if (!S.open[d.toggle]) delete S.editing[d.toggle]; return render(); }
+  if (d.review) {
+    const r = S.review.rows.find((x) => x.id === d.review);
+    if (!r || !r.complete) return;
+    const res = await call(r.status === "approved" ? "reopen" : "approve", r.id);
+    if (ok(res)) { if (r.status !== "approved") { S.open[r.id] = false; delete S.editing[r.id]; } await refreshAll(); render(); }
     return;
   }
+  if (d.fill) {
+    S.open[d.fill] = true; S.editing[d.fill] = true; render();
+    const r = S.review.rows.find((x) => x.id === d.fill), gap = r && r.criteria.find((c) => c.final == null);
+    const inp = gap && document.getElementById(`in-${d.fill}-${gap.id}`); if (inp) inp.focus();
+    return;
+  }
+  if (d.edit) { S.editing[d.edit] = true; render(); const f = document.querySelector(`#d-${CSS.escape(d.edit)} input[data-score]`); if (f) f.focus(); return; }
+  if (d.done) { delete S.editing[d.done]; return render(); }
+  if (d.reset) {
+    const r = S.review.rows.find((x) => x.id === d.reset);
+    for (const c of r.criteria) if (c.ai_score != null && c.final !== c.ai_score) await call("set_score", r.id, c.id, c.ai_score);
+    delete S.editing[d.reset]; await refreshAll(); render(); toast("Back to the suggested scores.");
+    return;
+  }
+  if (d.evOpen) { const [id, tab] = d.evOpen.split("|"); return loadEvidence(id, tab, null); }
+  if (d.tab) { S.ev.tab = d.tab; return render(); }
   if (d.ev) {
-    const m = d.ev.match(/^cell (\d+)/i), v = d.ev.match(/^video (\d+):(\d+)(?::(\d+))?/i);
-    if (m) {
-      S.evTab = "notebook"; S.hlCell = +m[1]; renderReviewParts(["evidence"]);
-      const el = $("#cell-" + m[1]), body = $("#evbody");
-      if (el && body) body.scrollTop += el.getBoundingClientRect().top - body.getBoundingClientRect().top - 12;
-    } else if (v) {
+    const m = d.ev.match(/^cell (\d+)/i), v = d.ev.match(/^video (\d+):(\d+)(?::(\d+))?/i), id = d.evid;
+    if (m) return loadEvidence(id, "notebook", +m[1]);
+    if (v) {
       const sec = v[3] != null ? +v[1] * 3600 + +v[2] * 60 + +v[3] : +v[1] * 60 + +v[2];
-      if (S.evTab !== "video") { S.evTab = "video"; renderReviewParts(["evidence"]); }
-      seekVideo(sec);
+      await loadEvidence(id, "video", null); seekVideo(sec);
     }
     return;
   }
-  if (d.act) return onAct(d.act);
+  if (d.act) return onAct(d.act, b);
 });
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && S.settings) { S.settings = null; render(); return; }
-  const r = e.target.closest && e.target.closest("[data-crit]");
-  if (r && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); r.click(); }
+  if (e.key === "Escape") { if (S.settings) { S.settings = null; render(); } else if (S.ev) { S.ev = null; render(); } }
 });
-// Text fields save when you leave them.
 document.addEventListener("change", async (e) => {
-  const t = e.target;
+  const t = e.target, d = t.dataset || {};
+  if (t.id === "rubric") { S.rubricPick = t.value; S.usedNote = ""; S.replaceWarn = null; await loadRubricPreview(); return render(); }
   if (t.id === "incl") { S.includeUnapproved = t.checked; return; }
-  if (t.dataset.cmt) { if (ok(await call("set_comment", S.sel, t.dataset.cmt, t.value))) toast("Comment saved."); return; }
-  if (t.dataset.fb) { if (ok(await call("set_feedback", S.sel, t.value))) toast("Feedback saved."); return; }
+  if (t.id === "regrade") { S.regrade = t.checked; return; }
+  if (t.name === "mode") { S.mode = t.value; return; }
+  if (d.pick) {
+    const v = t.value;
+    let r;
+    if (v === "none") r = await call("set_no_video", d.pick, true);
+    else if (v.startsWith("file:")) r = await call("assign_file", v.slice(5), d.pick);
+    else {
+      // "Undo": take back any file the professor gave this team, and any 'no video' choice
+      const mine = S.matches.unmatched.filter((f) => f.assigned_to === d.pick);
+      for (const f of mine) await call("assign_file", f.path, "");
+      r = await call("set_no_video", d.pick, false);
+    }
+    if (ok(r)) { S.matches = r; render(); const sel = document.getElementById(`pick-${d.pick}`); if (sel) sel.focus(); }
+    return;
+  }
+  if (d.score) {
+    const i = d.score.indexOf("|"), id = d.score.slice(0, i), crit = d.score.slice(i + 1);
+    if (t.value.trim() === "") { toast("Enter a number from 0 to the maximum.", true); await refreshReview(); return render(); }
+    return setScore(id, crit, Number(t.value));
+  }
+  if (d.cmt) { const i = d.cmt.indexOf("|"); if (ok(await call("set_comment", d.cmt.slice(0, i), d.cmt.slice(i + 1), t.value))) { toast("Comment saved."); await refreshReview(); } return; }
+  if (d.fb) { if (ok(await call("set_feedback", d.fb, t.value))) toast("Feedback saved."); return; }
 });
 
 // ---------------------------------------------------------------------------
-// Start: wait for the Python bridge. Open with ?mock in a browser to work on
-// the UI without Python (loads dev_mock.js).
+// Start: wait for the Python bridge. The page can also run against the dev server
+// (python -m desktop.devserver, then open http://127.0.0.1:8765/ ).
 // ---------------------------------------------------------------------------
 let started = false;
 async function start() {
   if (started) return;
   started = true;
-  await refresh();
-  if (S.state && S.state.rubric) await goStep(S.state.counts.graded ? 3 : 2);
+  await refreshState();
+  await loadRubricChoices();
+  await refreshMatches();
+  await refreshReview();
+  S.view = "start";
+  render();
 }
 window.addEventListener("pywebviewready", start);
 if (window.pywebview && window.pywebview.api && window.pywebview.api.get_state) start();
 setTimeout(() => {
   if (started) return;
-  if (/mock/.test(location.search + location.hash)) {
-    const s = document.createElement("script");
-    s.src = "dev_mock.js";
-    s.onload = start;
-    document.body.appendChild(s);
-  } else {
-    $("#root").innerHTML = `<div class="card" style="max-width:520px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:24px;display:grid;gap:8px"><h2>Start the app with Python</h2><p class="muted">This page is the app's screen. Run <span class="mono">python app.py</span> to open it, or add <span class="mono">?mock</span> to the address to try it with fake data.</p></div>`;
-  }
+  $("#root").innerHTML = `<section class="start"><div class="panel"><h2>Start the app with Python</h2><p class="muted">This page is the app's screen. Run <span class="mono">python app.py</span> to open it, or <span class="mono">python -m desktop.devserver</span> to use it in a browser.</p></div></section>`;
 }, 1500);
 })();
 </script>

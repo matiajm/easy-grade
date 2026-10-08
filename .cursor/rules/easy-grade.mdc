@@ -17,7 +17,8 @@ The professor opens a folder of submissions; everything runs locally.
 - The app only writes inside `<folder>/_grading/`.
 - `ui/index.html` is plain HTML/CSS/JS, no build step, no CDN (must work offline). Escape all
   student-provided text with `esc()`. Never insert notebook HTML outputs.
-- When you add an `Api` method, add the same method to `ui/dev_mock.js` and a test in `tests/`.
+- When you add an `Api` method, add a test in `tests/`. The screen can be tried in a browser against the real backend
+  with `python -m desktop.devserver` (no mock to keep in sync); `tests/test_ui_e2e.py` drives it headlessly.
 - AI scores must go through `parse_grader_output` (scores limited to rubric levels). AI only drafts;
   the professor approves.
 - AI calls live in `grader/ai_grader.py` (plain urllib, Anthropic Messages API, forced `submit_grades` tool).
