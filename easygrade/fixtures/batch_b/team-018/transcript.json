@@ -1,0 +1,82 @@
+{
+  "schema_version": "1",
+  "team_id": "team-018",
+  "produced_by": "fixture",
+  "status": "ok",
+  "language": "en",
+  "duration_seconds": 68.9,
+  "engine": {
+    "name": "whisper",
+    "model_size": "base",
+    "local": true
+  },
+  "speaker_labels_available": false,
+  "segments": [
+    {
+      "id": "s1",
+      "start_s": 0.0,
+      "end_s": 6.2,
+      "text": "Hi, I'm Camille, and this is Kofi. Our project looks at Miami-Dade restaurant inspections from 2025.",
+      "confidence": 0.84,
+      "speaker": null
+    },
+    {
+      "id": "s2",
+      "start_s": 6.2,
+      "end_s": 17.7,
+      "text": "I'll start with cleaning. We dropped inspections with no score because the score is what we measure, and we converted ZIP codes to strings so leading zeros are not lost.",
+      "confidence": 0.85,
+      "speaker": null
+    },
+    {
+      "id": "s3",
+      "start_s": 17.7,
+      "end_s": 21.2,
+      "text": "After removing duplicates we kept about five thousand inspections.",
+      "confidence": 0.86,
+      "speaker": null
+    },
+    {
+      "id": "s4",
+      "start_s": 21.2,
+      "end_s": 23.9,
+      "text": "Now Kofi will walk through the charts.",
+      "confidence": 0.95,
+      "speaker": null
+    },
+    {
+      "id": "s5",
+      "start_s": 23.9,
+      "end_s": 40.4,
+      "text": "Thanks Camille. In our bar chart of fail rate by ZIP code, the highest ZIP code fails about twice as often as the county average, and the top ZIPs are spread out, so it looks like a restaurant problem, not a neighborhood problem.",
+      "confidence": 0.86,
+      "speaker": null
+    },
+    {
+      "id": "s6",
+      "start_s": 40.4,
+      "end_s": 48.5,
+      "text": "The line chart shows the monthly average score. It only moves a few points, with the lowest month in the summer.",
+      "confidence": 0.95,
+      "speaker": null
+    },
+    {
+      "id": "s7",
+      "start_s": 48.5,
+      "end_s": 61.2,
+      "text": "Camille: For cuisines, the table shows the cuisine with the most violations per inspection is several times higher than the lowest one, which we think reflects how many handling steps the food needs.",
+      "confidence": 0.95,
+      "speaker": null
+    },
+    {
+      "id": "s8",
+      "start_s": 61.2,
+      "end_s": 68.9,
+      "text": "Kofi: To wrap up, cleaning choices mattered most, and the results point to individual restaurants rather than areas. Thank you.",
+      "confidence": 0.92,
+      "speaker": null
+    }
+  ],
+  "low_confidence_segment_ids": [],
+  "flags": []
+}
