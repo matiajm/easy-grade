@@ -1,3 +1,6 @@
 openpyxl>=3.1
 pywebview>=5.0
 certifi
+nbformat>=5.9
+pydantic>=2.5
+matplotlib>=3.7  # fixture generators in easygrade/fixtures and their tests

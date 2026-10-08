@@ -200,18 +200,21 @@ def _read_xlsx_rows(path: Path) -> tuple[list[dict], str | None]:
     from openpyxl import load_workbook
 
     wb = load_workbook(path, data_only=True, read_only=True)
-    ws = wb["Rubric"] if "Rubric" in wb.sheetnames else wb.worksheets[0]
-    it = ws.iter_rows(values_only=True)
-    header = [_norm(h) for h in next(it, [])]
-    rows = []
-    for values in it:
-        if values is None or all(v in (None, "") for v in values):
-            continue
-        rows.append({header[i]: values[i] for i in range(min(len(header), len(values)))})
-    # Optional assignment name in a sheet called "Info", cell B1.
-    title = None
-    if "Info" in wb.sheetnames:
-        title = wb["Info"]["B1"].value
+    try:
+        ws = wb["Rubric"] if "Rubric" in wb.sheetnames else wb.worksheets[0]
+        it = ws.iter_rows(values_only=True)
+        header = [_norm(h) for h in next(it, [])]
+        rows = []
+        for values in it:
+            if values is None or all(v in (None, "") for v in values):
+                continue
+            rows.append({header[i]: values[i] for i in range(min(len(header), len(values)))})
+        # Optional assignment name in a sheet called "Info", cell B1.
+        title = None
+        if "Info" in wb.sheetnames:
+            title = wb["Info"]["B1"].value
+    finally:
+        wb.close()  # read-only workbooks keep the file open (locks it on Windows)
     return rows, (str(title).strip() if title else None)
 
 
