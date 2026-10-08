@@ -1,0 +1,100 @@
+{
+  "team": "team01",
+  "categories": {
+    "data_cleaning": {
+      "level": "excellent",
+      "score": 39,
+      "confidence": "high",
+      "reason": "Every Q1 step is done in code and justified in Markdown (duplicates, 'pending' scores, missing ZIP and cuisine, result labels, date and 5-character ZIP), the counts reconcile (2,480 - 36 - 53 = 2,391) and nothing errors, with one point held back because two justifications (duplicates being identical, dropped rows being spread across months and ZIPs) are not shown in any output.",
+      "evidence": [
+        "Cell 8: 'Duplicated inspection_id: 36' and 'Non-numeric scores: 41'",
+        "Cell 9: 'drop those rows rather than guessing a score'",
+        "Cell 9: 'we keep these rows and label the cuisine `Unknown`'",
+        "Cell 10: .astype(int).astype(str).str.zfill(5); output 'Inspections remaining: 2,391' and 'Result labels: ['Conditional', 'Fail', 'Pass']'",
+        "Cell 11: inspection_date datetime64[ns], score float64, zip_code object",
+        "Cell 9: 'identical values' and Cell 12: 'spread across all months and ZIP codes' (neither is checked in any output)"
+      ],
+      "comment": "Strength: you caught that the word 'pending' hid 41 unusable scores even though isna() showed none, and you explained each decision before making it. Improvement: back up claims like 'identical values' and 'spread across all months and ZIP codes' with a quick check, for example inspections_raw.duplicated().sum() or counting the dropped rows by month."
+    },
+    "analysis_viz": {
+      "level": "excellent",
+      "score": 48,
+      "confidence": "high",
+      "reason": "All four questions are answered with a fitting table or chart (bar for ZIP fail rates, line for months, table plus horizontal bar for cuisines), every chart has a title and axis labels with a legend where there is more than one series, and the table values recompute correctly, with two points held back because the Q3 y-axis is labeled '0-100' but spans only about 80 to 86, which visually exaggerates a 6-point dip.",
+      "evidence": [
+        "Cell 14: '# Only ZIP codes with at least 25 inspections'; top row '33142  87  16  0.184'",
+        "images/cell15_1.png: title 'Top 10 ZIP Codes by Inspection Fail Rate (2025)', axes 'ZIP code' and 'Fail rate (%)', legend with dashed 'County average (9.6%)'",
+        "images/cell19_1.png: line chart 'Average Inspection Score by Month, 2025', y-axis 'Average inspection score (0-100)' runs from about 80 to 86, legend with '2025 average (83.5)'",
+        "Cell 22: table sorted by violations_per_inspection, 'Seafood  212  1018  4.80'",
+        "images/cell23_1.png: horizontal bars 'Violations per Inspection by Cuisine (2025)', both axes labeled, single series so no legend needed"
+      ],
+      "comment": "Strength: the reference lines (county average, yearly average) and the 25-inspection minimum make your charts easy to read and hard to misread. Improvement: on the monthly line chart, start the y-axis lower or note that it is zoomed in, so readers do not overestimate a 6-point change."
+    },
+    "interpretation": {
+      "level": "excellent",
+      "score": 28,
+      "confidence": "high",
+      "reason": "Every question has a summary that adds meaning beyond the numbers (the hidden 'pending' scores, the 25-inspection filter, summer heat, raw proteins) and the Conclusions cell names a limitation, but a few claims rest on facts never shown in the notebook (ZIP geography, spread of dropped rows, 'Unknown' behaving like the average), so the score sits just below the middle of the range.",
+      "evidence": [
+        "Cell 12: '2,391 of 2,480 inspections (96.4%) remain'",
+        "Cell 16: 'almost double the county average of 9.6%'; 'Seven of the top ten ZIP codes are clustered north and west of downtown' (no location data or map in the notebook)",
+        "Cell 20: 'summer conditions (not stricter inspectors) explain most of the drop'",
+        "Cell 24: 'a high number of inspections does not by itself mean more violations'; 'behaves like the average' (overall average never computed)",
+        "Cell 26: 'Limitation: the data is one year only'"
+      ],
+      "comment": "Strength: your summaries explain why the results matter and connect the questions, such as linking the summer dip to cuisines that handle raw proteins, and you named a real limitation. Improvement: when a claim is not shown in your output, such as where the top ZIP codes are or how 'Unknown' compares to the average, add the supporting number or say it comes from outside knowledge."
+    },
+    "code_quality": {
+      "level": "excellent",
+      "score": 23,
+      "confidence": "medium",
+      "reason": "The notebook has a heading for each question, a logical flow, execution counts 1 to 13 in order with no errors, helpful comments and descriptive names, but cell 25 is leftover unused code named tmp, so it sits at the bottom of excellent and is borderline with good.",
+      "evidence": [
+        "facts.json: execution_counts 1-13 in order, errors [], execution_issues []",
+        "Cells 3, 6, 13, 17, 21, 26: headings 'Setup', 'Q1. Cleaning' through 'Conclusions'",
+        "Cell 10: comment '\"pending\" scores become NaN, then rows without a score or ZIP code are dropped'",
+        "Cell 25: 'tmp = inspections.groupby(\"restaurant_name\")[\"score\"].min()' is never used afterward"
+      ],
+      "comment": "Strength: the notebook reads like a report, with a heading per question and names like zip_stats and cuisine_violations that explain themselves. Improvement: delete leftover cells such as cell 25 (tmp) before the final Restart & Run All, as the submission rules ask."
+    },
+    "presentation": {
+      "level": "excellent",
+      "score": 32,
+      "confidence": "medium",
+      "reason": "The talk walks clearly through all four questions within the 5-minute limit, has an explicit hand-off between two speakers, points to each chart and quotes numbers that match the notebook, but it is placed at the bottom of the range because the split looks uneven (the first speaker covers only cleaning, about 30 seconds) and at 1:37 Q3 and Q4 get one or two sentences each.",
+      "evidence": [
+        "[00:14] 'We removed 36 duplicate inspection IDs'; [00:26] 'That left 2,391 inspections'",
+        "[00:32] 'I'm Student B, and I worked on question 2. If you look at our bar chart'",
+        "[00:46] 'We only counted zip codes with at least 25 inspections, so tiny areas would not dominate'",
+        "[01:00] 'our line chart shows the average score dropping'",
+        "[01:16] 'Our table and the horizontal bar chart show that seafood and Chinese'",
+        "facts.json: duration_seconds 97.5, over_time_limit false"
+      ],
+      "comment": "Strength: you covered every question in order, pointed to each chart and explained why you filtered out small ZIP codes, which shows you understand your own analysis. Improvement: use more of the allowed time to balance the speaking parts and go deeper on Q3 and Q4, for example why seafood and Chinese restaurants have more violations."
+    },
+    "collaboration": {
+      "level": "excellent",
+      "score": 20,
+      "confidence": "medium",
+      "reason": "The header has all four required fields and the file name follows the convention (both checked by code), and responsibilities are split evenly by question with both students presenting, though meaningful contribution by both cannot be proven from the files.",
+      "evidence": [
+        "facts.json: header_missing [], filename_ok true, students_count 2",
+        "Cell 1: 'Student A: data cleaning (Q1), monthly score trend (Q3)... Student B: ZIP code fail rates (Q2), cuisine violations (Q4)... Both: presentation.'",
+        "[00:32] 'I'm Student B, and I worked on question 2'"
+      ],
+      "comment": "Strength: your header is complete and the responsibilities line makes it clear who owned each question. Improvement: make the video match that split with a clear hand-off before each partner's questions, so it is easy to see who presented what."
+    }
+  },
+  "flags": [
+    "Transcript [00:00] and [00:32] contain the first speaker's spoken name, apparently misheard, so the redaction did not replace it. It is not repeated here. Check the redaction before sharing this transcript.",
+    "Recording is 1:37 of the allowed 5:00. The rubric's needs_work level mentions being 'significantly over or under time' but no minimum is set. Confirm this length is acceptable.",
+    "There is no hand-off after [00:32], so the second speaker appears to present Q2, Q3, Q4 and the takeaway, although the header assigns Q3 to Student A. Confirm the speaking split in the recording.",
+    "Code Quality is borderline between excellent and good because of one leftover unused cell (cell 25). Confirm the level."
+  ],
+  "ai_usage": {
+    "status": "no concern",
+    "signals": []
+  },
+  "status": "needs review",
+  "graded_at": "2026-10-08T11:05:00"
+}

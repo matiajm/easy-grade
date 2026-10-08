@@ -1,0 +1,99 @@
+{
+  "team": "team02",
+  "categories": {
+    "data_cleaning": {
+      "level": "needs_work",
+      "score": 24,
+      "confidence": "medium",
+      "reason": "Duplicates, missing ZIPs and the date and ZIP types were handled and the remaining count was reported, but score was left as text, the inconsistent result values were not cleaned in Q1, and the cleaning decisions are barely explained, so it sits at the top of needs work rather than in good.",
+      "evidence": [
+        "Cell 6: df = df.drop_duplicates() / df.dropna(subset=[\"zip_code\"])",
+        "Cell 6: df[\"score\"] = df[\"score\"].str.strip()  # fix score; dtypes output still shows 'score  object'",
+        "Cell 4 output: result has both 'pass' and 'Pass'; score has the value 'pending'",
+        "Cell 5: 'We fixed some of the columns and removed duplicates.' (only explanation of cleaning)",
+        "Cell 7: 'There are 2432 rows left after cleaning.'"
+      ],
+      "comment": "You removed duplicates, dropped rows with no ZIP code, converted the date and reported how many inspections remain, and the code ran without errors. Next time convert score to a number during cleaning (pd.to_numeric, then decide what to do with values like 'pending'), standardize the result labels, and write a Markdown cell explaining why you made each choice."
+    },
+    "analysis_viz": {
+      "level": "good",
+      "score": 41,
+      "confidence": "high",
+      "reason": "All four questions are answered with a fitting chart or table and the Q2 bar chart is fully labeled with a sensible minimum-count filter, but the Q3 line chart has no axis labels, which is a labeling issue rather than a missing answer.",
+      "evidence": [
+        "Cell 10: top10 = rates[counts >= 25].sort_values(ascending=False).head(10)",
+        "images/cell10_1.png: bar chart 'Fail Rate by Zip Code' with x label 'ZIP code' and y label 'Fail rate (%)', 10 bars",
+        "images/cell13_1.png: line chart 'Average Score by Month' with no x or y axis label; months shown only as 2, 4, ... 12",
+        "Cell 16 output: 'Seafood 4.80 ... Cafe/Bakery 2.40' (violations per inspection table)",
+        "Cell 7: Q1 count reported as 2432"
+      ],
+      "comment": "Your fail-rate chart is clear and well labeled, and requiring at least 25 inspections per ZIP code before ranking was a smart way to avoid misleading rates. Add axis labels to the monthly chart (for example 'Month' and 'Average score') and show month names so readers can read it without guessing."
+    },
+    "interpretation": {
+      "level": "good",
+      "score": 22,
+      "confidence": "medium",
+      "reason": "Every question has a written summary and Q2 adds some context, but Q1 and Q3 are surface-level and the Q4 summary only restates every number in the table, so the score is in the lower part of good.",
+      "evidence": [
+        "Cell 11: 'Most of the zip codes in the top 10 are in the northern part of the county, so those areas might need more attention.'",
+        "Cell 14: 'The scores go down in the summer and then go back up at the end of the year.'",
+        "Cell 17: 'Seafood has 4.80 violations per inspection, Chinese has 4.50, Haitian has 4.10...'",
+        "Cell 7: 'There are 2432 rows left after cleaning.'"
+      ],
+      "comment": "Your Q2 summary goes beyond the number by pointing to where the high-fail ZIP codes are and what that could mean for inspections. For Q3 and Q4, explain what the pattern might mean (for example why scores could drop in summer, or why some cuisines have more violations) instead of listing the values from the table."
+    },
+    "code_quality": {
+      "level": "good",
+      "score": 19,
+      "confidence": "high",
+      "reason": "The notebook ran in order without errors and has a clear heading for each question, but comments are sparse or misleading, one variable name is not meaningful, and there is an unnecessary hidden Markdown cell.",
+      "evidence": [
+        "facts.json: execution counts 1 to 6 in order, no errors",
+        "Cells 5, 9, 12, 15: headings '## Q1 Cleaning', '## Q2 ...', '## Q3 ...', '## Q4 ...'",
+        "Cell 6: '# fix score' on a line that only strips spaces and does not convert the column",
+        "Cell 16: 'v = df.groupby(\"cuisine\")...' with the comment '# table'",
+        "Cell 8: hidden Markdown cell with no project content"
+      ],
+      "comment": "Your notebook is easy to follow: one heading per question, short cells, and it ran top to bottom with no errors. Use descriptive names (for example violations_by_cuisine instead of v), make comments describe what the line really does, and remove cells that are not part of the analysis."
+    },
+    "presentation": {
+      "level": "good",
+      "score": 25,
+      "confidence": "low",
+      "reason": "The talk is organized, within the time limit and walks through all four questions with references to the charts and table, but it is very short, explains little about why the results matter, and the second partner says only one sentence, so it is at the low end of good.",
+      "evidence": [
+        "[00:06] 'First, we cleaned the data.' / [00:09] 'which left 2,432 rows'",
+        "[00:20] 'For question two, we made a bar chart of the fail rate by zip code'",
+        "[00:42] 'For question four, we made a table of violations for inspection by cuisine.'",
+        "[00:55] 'I helped with the zip code chart.' (only line from the second partner)",
+        "facts.json: recording length 68.5 seconds of a 5-minute maximum"
+      ],
+      "comment": "You covered every question in a clear order and pointed to the chart or table behind each finding. Use more of your five minutes so both partners share the findings, and explain why the results matter, not only what they are."
+    },
+    "collaboration": {
+      "level": "needs_work",
+      "score": 12,
+      "confidence": "medium",
+      "reason": "The header has the students, section and date and the notebook was run in order, but two submission rules were missed (file name and the Responsibilities line) and it is unclear what each partner contributed, which matches needs work at its upper end.",
+      "evidence": [
+        "facts.json: filename_ok false (file name does not follow Lastname1_Lastname2_FinalProject.ipynb)",
+        "facts.json: header_missing ['Responsibilities']",
+        "Cell 1: '**Section:** A' and '**Date:** April 28, 2026' present",
+        "[00:55] 'I helped with the zip code chart.' (only statement about a partner's role)"
+      ],
+      "comment": "Your header lists the students, section and date, and the notebook was run top to bottom before submitting. Name the file exactly as required and add the Responsibilities line saying who did which part."
+    }
+  },
+  "flags": [
+    "Text addressed to the grader in cell 8",
+    "Confirm both partners presented: the second partner speaks one sentence at 00:55 ('I helped with the zip code chart'); the rest of the talk sounds like the first speaker",
+    "Recording is 1:08 against a 5-minute maximum; decide whether this counts as significantly under time",
+    "Transcript line at 00:55 may contain a misheard name fragment that was not redacted; check redaction before sharing"
+  ],
+  "ai_usage": {
+    "status": "no concern",
+    "signals": []
+  },
+  "status": "needs review",
+  "graded_at": "2026-10-08T11:05:00"
+}

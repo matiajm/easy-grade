@@ -1,0 +1,106 @@
+{
+  "team": "team03",
+  "categories": {
+    "data_cleaning": {
+      "level": "needs_work",
+      "score": 8,
+      "confidence": "high",
+      "reason": "Starting from the middle of the range (13), points come off because the only cleaning cell fails, so duplicates are not removed and types are not converted. Missing values and inconsistent values ('pending' score, lowercase 'pass') are never handled, no Markdown explains any cleaning decision, and the cleaned row count is not reported. A little credit stays for loading the data and checking missing values.",
+      "evidence": [
+        "Cell 5: 'df_clean = df_raw.drop_duplicates()' fails with NameError: name 'df_raw' is not defined",
+        "Cell 6: df.isna().sum() shows 'zip_code 12' and 'cuisine 57' missing; no later cell handles them",
+        "Cell 4 output: score value 'pending', result value 'pass' (lowercase), zip_code as float '33135.0'; never fixed",
+        "No Markdown cell explains cleaning decisions or reports how many inspections remain (not found)",
+        "Transcript [00:14]: 'We didn't really clean much'"
+      ],
+      "comment": "You did check for missing values with isna().sum(), which is the right first step. Next, fix the df_raw error so your cleaning cell actually runs. Then convert score, violations, inspection_date and zip_code, fix 'pass' vs 'Pass', and explain each choice in a Markdown cell, including how many rows remain."
+    },
+    "analysis_viz": {
+      "level": "needs_work",
+      "score": 8,
+      "confidence": "high",
+      "reason": "Starting from the middle of the range (17), points come off because Q3 is an empty cell and Q4 is missing. Q2 plots counts of fails instead of the fail rate, and its only chart has no title or axis labels and shows ZIP codes as decimals. Some credit stays for producing a top-10 bar chart.",
+      "evidence": [
+        "Cell 9: 'df[df[\"result\"] == \"Fail\"].groupby(\"zip_code\").size()' counts fails, not the share of inspections that failed",
+        "images/cell9_1.png: no title, no x or y axis labels, ZIP codes shown as '33054.0', '33125.0'",
+        "Cell 12 (Q3 Monthly scores): code cell is empty",
+        "Q4 violations by cuisine: not found in the notebook",
+        "Transcript [00:51]: 'We didn't get to finish the monthly part or the cuisine part'"
+      ],
+      "comment": "A sorted bar chart of the top 10 ZIP codes is a good chart type for Q2. To answer the question as asked, divide fails by total inspections per ZIP to get a rate. Add a title and axis labels, store ZIP codes as 5-character strings, and complete the Q3 line chart and the Q4 table."
+    },
+    "interpretation": {
+      "level": "needs_work",
+      "score": 3,
+      "confidence": "high",
+      "reason": "Starting from the middle of the range (10), points come off because Q1, Q3 and Q4 have no written summary. The only summary relies on a customer_satisfaction_score column that is not in the dataset or any output, and its closing sentence is too vague to show what the results mean.",
+      "evidence": [
+        "Cell 10: 'zip codes with lower `customer_satisfaction_score` values tend to have more failed inspections'; this column is not in the dataset or any output",
+        "Cell 10: 'the data reveals meaningful patterns across Miami-Dade County' (no specific finding)",
+        "Written summaries for Q1, Q3 and Q4: not found"
+      ],
+      "comment": "You did try to connect the fail chart to a broader idea, which is the right instinct. Base each summary only on columns and numbers your notebook actually shows. For example, name the ZIP codes with the highest fail rate and suggest why that might be. Write one summary for every question."
+    },
+    "code_quality": {
+      "level": "needs_work",
+      "score": 5,
+      "confidence": "high",
+      "reason": "Starting from the middle of the range (8), points come off because the notebook does not run top to bottom (NameError, out-of-order execution), leaves an empty Q3 cell, and contains code unrelated to the questions (an unused numpy import and an outlier model that nothing else uses). Slight credit stays for the question headings.",
+      "evidence": [
+        "Cell 5: NameError: name 'df_raw' is not defined",
+        "Execution counts in notebook order: 7, 2, 12, none, 5, 9, none",
+        "Cell 12: empty code cell under '## Q3 Monthly scores'",
+        "Cell 3: 'import numpy as np' is never used; Cell 7 IsolationForest result is not used in any question",
+        "Cell 8 and Cell 11: Markdown headings '## Q2 Fail rate by zip code' and '## Q3 Monthly scores'"
+      ],
+      "comment": "Using a Markdown heading for each question makes the notebook easy to follow. Before you submit, run Kernel > Restart & Run All and fix any error it shows. Delete empty cells and unused code, and add a short comment above each step."
+    },
+    "presentation": {
+      "level": "needs_work",
+      "score": 6,
+      "confidence": "high",
+      "reason": "Starting from the middle of the range (11), points come off because only one partner speaks and the presenter says they do not understand the outlier method. Two claims are not supported by the notebook (a left join, and a customer satisfaction link), and two of the questions were not covered. Some credit stays for briefly describing the fail chart.",
+      "evidence": [
+        "Transcript [00:56]: the partner 'couldn't be here for the recording'",
+        "Transcript [00:23]: 'Honestly, I'm not really sure how the outlier part works.'",
+        "Transcript [00:32]: 'we did a left join with a zip code table'; no join found in the notebook",
+        "Transcript [00:45]: 'customer satisfaction is connected to the inspection results'; not in any output",
+        "Recording length 65.7 s (facts.json), well under the 5-minute maximum"
+      ],
+      "comment": "You were clear and honest about what was finished, and you pointed to the ZIP code chart. Next time, both partners need to speak. Use the full time to walk through each chart, and only describe steps and results that appear in your notebook."
+    },
+    "collaboration": {
+      "level": "good",
+      "score": 15,
+      "confidence": "medium",
+      "reason": "This starts in the middle of the range (15). The header is complete, the file name follows the rule and responsibilities are split clearly, which supports the score. But the notebook was not run top to bottom, it still has a leftover empty cell, and one partner did not speak, so the score does not go higher.",
+      "evidence": [
+        "Cell 1: header has Students, Section, Date and Responsibilities (facts.json header_missing is empty)",
+        "facts.json: filename_ok true",
+        "Cell 1: 'Student A: data loading, cleaning, outlier detection. Student B: charts, written summaries, presentation slides.'",
+        "Transcript [00:56]: the partner 'couldn't be here for the recording'"
+      ],
+      "comment": "Your header is complete and the Responsibilities line clearly splits the work. Make sure each partner's listed part shows up in the final work. Charts and written summaries are listed, but there is one unlabeled chart and one summary. Both partners also need to take part in the recording."
+    }
+  },
+  "flags": [
+    "Only one partner appears in the recording: at [00:56] the presenter says the partner could not be there. Confirm with the team.",
+    "Transcript [00:56] contains a personal name that was not replaced (likely misheard by the speech model). It is not repeated here; do not share the transcript as-is.",
+    "Q3 and Q4 were not attempted (Cell 12 empty, no Q4 cell); the presenter confirms this at [00:51].",
+    "The partner's listed responsibilities (charts, written summaries, slides) show up only as one unlabeled chart and one summary; whether both partners contributed meaningfully cannot be verified from the files.",
+    "The recording is 65.7 s against a 5-minute maximum. No minimum is stated, so decide whether 'significantly under time' applies."
+  ],
+  "ai_usage": {
+    "status": "review",
+    "signals": [
+      {"signal": "Leftover chatbot text", "evidence": "Cell 2: 'Certainly! Here's a comprehensive analysis of the dataset:'"},
+      {"signal": "A summary cites columns or results that do not appear in any output", "evidence": "Cell 10: '`customer_satisfaction_score`' is not in the dataset or any output; repeated in Transcript [00:45]"},
+      {"signal": "A presenter says they do not know how their own code works", "evidence": "Transcript [00:23]: 'Honestly, I'm not really sure how the outlier part works.'"},
+      {"signal": "Spoken explanation contradicts what the notebook does", "evidence": "Transcript [00:32]: 'we did a left join with a zip code table'; Cell 9 groups df by zip_code directly and there is no join anywhere"},
+      {"signal": "Methods or libraries far outside the course, used without explanation", "evidence": "Cell 3 and Cell 7: sklearn IsolationForest(contamination=0.05) with no Markdown explanation"},
+      {"signal": "Output in a cell that was never run", "evidence": "Cell 6: has isna().sum() output but no execution count (could also be a kernel restart)"}
+    ]
+  },
+  "status": "needs review",
+  "graded_at": "2026-10-08T11:05:00"
+}

@@ -1,0 +1,101 @@
+{
+  "team": "team02",
+  "categories": {
+    "data_cleaning": {
+      "level": "needs_work",
+      "score": 25,
+      "confidence": "medium",
+      "reason": "Duplicates, rows with no ZIP code and the date and ZIP conversions are handled and the remaining count is reported, but score stays as text, inconsistent result values are left uncleaned in Q1 and the only explanation is one vague sentence, so this sits at the top of needs_work (25), just below good.",
+      "evidence": [
+        "Cell 6: df = df.drop_duplicates() / df.dropna(subset=[\"zip_code\"]) / pd.to_datetime(df[\"inspection_date\"])",
+        "Cell 6 output: 'score  object' after df[\"score\"].str.strip()  # fix score (score not converted to a number)",
+        "Cell 4 output: score value 'pending' and result values 'pass' vs 'Pass' are not addressed in the cleaning cell",
+        "Cell 5: 'We fixed some of the columns and removed duplicates.' (the only cleaning explanation)",
+        "Cell 7: 'There are 2432 rows left after cleaning.'",
+        "facts.json: errors [] and execution counts 1 to 6 in order"
+      ],
+      "comment": "You removed duplicates, dropped rows with no ZIP code, converted the date and reported the 2,432 rows left, which is a solid start. Next time, turn score into a number during cleaning (and decide what to do with values like 'pending'), make result values consistent ('pass' vs 'Pass'), check every column for missing values, and explain each decision in its own Markdown cell as Q1 asks."
+    },
+    "analysis_viz": {
+      "level": "good",
+      "score": 41,
+      "confidence": "high",
+      "reason": "All four questions are answered with a fitting chart or table and the Q2 bar chart is fully labeled with a sensible sample-size filter, but the Q3 line chart has no axis labels and shows months as bare numbers, so good at 41, above the middle but short of excellent.",
+      "evidence": [
+        "Cell 10 / images/cell10_1.png: bar chart 'Fail Rate by Zip Code', x 'ZIP code', y 'Fail rate (%)', top 10 ZIP codes",
+        "Cell 10: top10 = rates[counts >= 25] (only ZIP codes with at least 25 inspections)",
+        "Cell 13 / images/cell13_1.png: line chart 'Average Score by Month' with no x or y axis labels; x-axis ticks are 2 to 12",
+        "Cell 16: table of mean violations by cuisine, 'Seafood 4.80' highest, 'Cafe/Bakery 2.40' lowest",
+        "Cell 6 and Cell 7: Q1 remaining row count 2432 reported"
+      ],
+      "comment": "Your fail-rate bar chart is clear and well labeled, and keeping only ZIP codes with at least 25 inspections was a smart choice. Add x and y axis labels to the monthly line chart and show month names instead of the numbers 2 to 12 so readers can read it at a glance."
+    },
+    "interpretation": {
+      "level": "good",
+      "score": 22,
+      "confidence": "high",
+      "reason": "Every question has some written text and the Q2 summary adds geographic context, but Q1 and Q4 only restate numbers and Q3 describes the shape of the line without explaining it, so good near the low end (22).",
+      "evidence": [
+        "Cell 7: 'There are 2432 rows left after cleaning.'",
+        "Cell 11: 'Most of the zip codes in the top 10 are in the northern part of the county'",
+        "Cell 14: 'The scores go down in the summer and then go back up at the end of the year.'",
+        "Cell 17: 'Seafood has 4.80 violations per inspection, Chinese has 4.50...' (lists every table value)"
+      ],
+      "comment": "Your Q2 summary goes beyond the numbers by pointing out where the high-fail ZIP codes are and what that could mean. For Q3 and Q4, explain what the pattern might mean (for example, why scores could dip in summer or why seafood places get more violations) instead of listing the values again."
+    },
+    "code_quality": {
+      "level": "good",
+      "score": 20,
+      "confidence": "high",
+      "reason": "The notebook has a heading for each question and runs in order with no errors, but comments are sparse, one variable is named v, a '# fix score' line leaves score unconverted and a Markdown cell has no project content, so good at 20.",
+      "evidence": [
+        "facts.json: execution counts 1 to 6 in order, errors []",
+        "Cells 5, 9, 12, 15: headings 'Q1 Cleaning' to 'Q4 Violations per inspection by cuisine'",
+        "Cell 6: df[\"score\"] = df[\"score\"].str.strip()  # fix score (score stays object; converted later in Cell 13 as score_num)",
+        "Cell 16: v = df.groupby(\"cuisine\")... with comment '# table'",
+        "Cell 8: Markdown cell with no project content"
+      ],
+      "comment": "The notebook runs in order with no errors and has a clear heading for each question, which makes it easy to follow. Use descriptive names instead of v, write comments that say why a step is done, and remove lines that do not do what their comment says, such as the '# fix score' line that leaves score as text."
+    },
+    "presentation": {
+      "level": "needs_work",
+      "score": 22,
+      "confidence": "low",
+      "reason": "The talk covers all four findings in order and refers to the charts, but it lasts 68 seconds of a 5-minute limit, the second presenter says only one clear sentence and it explains what was made rather than why, so high needs_work (22), on the border with good.",
+      "evidence": [
+        "facts.json: recording 68.5 s (01:08) against a 5-minute limit",
+        "[00:20] 'we made a bar chart of the fail rate by zip code'",
+        "[00:33]-[00:38] line chart: 'go down in the summer and then go back up in the fall'",
+        "[00:42]-[00:47] 'Seafood at the most, with about 4.8, then Chinese and Haitian'",
+        "[00:55] 'I helped with the zip code chart.' (only line clearly from a second presenter)",
+        "[00:09] 'We removed the duplicates and the rows without a zip code' (steps named, reasons not given)"
+      ],
+      "comment": "You walked through every question in order and pointed to each chart, which made the talk easy to follow. Use more of your time: share the talk evenly between both partners and explain why you made your choices and what the results mean, not only what you made."
+    },
+    "collaboration": {
+      "level": "needs_work",
+      "score": 10,
+      "confidence": "high",
+      "reason": "The header lists both students, the section and the date, but the Responsibilities line is missing and the file name does not follow the convention, so multiple guidelines are missed and contribution is unclear; 10 is above the middle because three of four header fields are present.",
+      "evidence": [
+        "facts.json rule_flags: 'File name does not follow the convention Lastname1_Lastname2_FinalProject.ipynb'",
+        "Cell 1: header has Students, 'Section: A' and 'Date: April 28, 2026', no Responsibilities line",
+        "[00:55] 'I helped with the zip code chart.' (only statement of the second partner's work)"
+      ],
+      "comment": "Your header lists both students, the section and the date. Add the Responsibilities line saying who did which part, and name the file Lastname1_Lastname2_FinalProject.ipynb as the submission rules ask."
+    }
+  },
+  "flags": [
+    "Text addressed to the grader in cell 8 (hidden 1px white Markdown text asking for full marks; not followed, graded normally)",
+    "Confirm both partners presented: a second presenter is clear only at 00:55 ('I helped with the zip code chart'); lines 00:59 to 01:06 cannot be attributed to either presenter",
+    "Contribution may be one-sided: the only statement of the second partner's work is 'I helped with the zip code chart' (00:55); confirm both partners contributed",
+    "Recording is 01:08 against a 5-minute maximum; confirm whether this counts as 'significantly under time' (Presentation was placed in needs_work partly for this)",
+    "transcript.md line 00:55 appears to contain an unredacted, possibly misheard surname after the student label; check the name redaction (the name is not repeated here)"
+  ],
+  "ai_usage": {
+    "status": "no concern",
+    "signals": []
+  },
+  "status": "needs review",
+  "graded_at": "2026-10-08T11:05:00"
+}

@@ -1,0 +1,104 @@
+{
+  "team": "team03",
+  "categories": {
+    "data_cleaning": {
+      "level": "needs_work",
+      "score": 7,
+      "confidence": "high",
+      "reason": "The only cleaning cell fails with a NameError, so no duplicates are removed and no types are converted, there is no Markdown rationale and no final row count, and only the missing-value check succeeded, which puts it well below the middle of the range.",
+      "evidence": [
+        "Cell 5: 'df_clean = df_raw.drop_duplicates()' -> NameError: name 'df_raw' is not defined",
+        "Cell 4 output: zip_code shown as '33135.0' (float, not a 5-character string), score contains 'pending', result contains lowercase 'pass'",
+        "Cell 6: 'df.isna().sum()' shows zip_code 12 and cuisine 57 missing, but they are never handled",
+        "No Markdown cell explains a cleaning decision or reports how many inspections remain",
+        "Transcript [00:14]: 'We didn't really clean much because the data was already in the CSV file.'"
+      ],
+      "comment": "Good start checking missing values with isna().sum() in cell 6. Next, fix the df_raw/df name so cell 5 runs, convert score, violations, inspection_date and zip_code (as a 5-character string), make result values consistent (\"pass\" vs \"Pass\"), drop duplicates, and explain each step and the final row count in Markdown."
+    },
+    "analysis_viz": {
+      "level": "needs_work",
+      "score": 8,
+      "confidence": "high",
+      "reason": "Only Q2 is attempted, and it plots fail counts instead of fail rates on a chart with no title or axis labels, while Q3 is an empty cell and Q4 is missing, so all three needs-work descriptors apply.",
+      "evidence": [
+        "Cell 9: 'df[df[\"result\"] == \"Fail\"].groupby(\"zip_code\").size()' counts fails, it does not compute the share of inspections that failed",
+        "images/cell9_1.png: no title, no x or y axis labels, ZIP codes shown as floats such as '33054.0'",
+        "Cell 12 (Q3 Monthly scores): code cell is empty, no line chart",
+        "Q4 (violations by cuisine): not found in the notebook",
+        "Transcript [00:51]: 'We didn't get to finish the monthly part or the cuisine part'"
+      ],
+      "comment": "Sorting and keeping the top 10 ZIP codes in cell 9 is the right idea for Q2. To answer it fully, divide fails by total inspections per ZIP to get a rate, add a title and axis labels, show ZIP codes as text, and complete Q3 (monthly line chart) and Q4 (violations-per-inspection table by cuisine)."
+    },
+    "interpretation": {
+      "level": "needs_work",
+      "score": 4,
+      "confidence": "high",
+      "reason": "There is one written summary for four questions, and it relies on a customer_satisfaction_score column that is not in the dataset or any output, so it does not show the chart's results were interpreted.",
+      "evidence": [
+        "Cell 10: 'zip codes with lower `customer_satisfaction_score` values tend to have more failed inspections'",
+        "Cell 4 output columns: inspection_id, restaurant_name, zip_code, inspection_date, cuisine, score, violations, result (no satisfaction column)",
+        "Cell 10: 'Overall, the data reveals meaningful patterns across Miami-Dade County.' (vague, no specifics)",
+        "No written summary found for Q1, Q3 or Q4"
+      ],
+      "comment": "You wrote a summary right after your Q2 chart, which is the right place for it. Base each summary only on columns and numbers your outputs actually show (for example, name the top ZIP codes and their fail rates), and write one for every question."
+    },
+    "code_quality": {
+      "level": "needs_work",
+      "score": 6,
+      "confidence": "high",
+      "reason": "The notebook has a few headings, but it has an error cell, cells run out of order, an empty Q3 cell, leftover chatbot text in a heading cell, almost no comments and no Q1 or Q4 sections, so it does not run cleanly top to bottom.",
+      "evidence": [
+        "facts.json rule_flags: cell 5 NameError; execution counts [7, 2, 12, 5, 9]; cell 6 output with no execution count",
+        "Cell 2: 'Certainly! Here's a comprehensive analysis of the dataset:' left above the title heading",
+        "Cell 12: empty code cell under '## Q3 Monthly scores'",
+        "Cell 3: imports numpy, which no cell uses",
+        "Cell 8 and Cell 11: only Q2 and Q3 have headings; no Q1 or Q4 heading"
+      ],
+      "comment": "Using a Markdown heading for each question (cells 8 and 11) makes the notebook easy to follow. Before submitting, run Kernel > Restart & Run All so there are no errors and the cells run in order, add a heading for every question, and remove leftover text, empty cells and unused imports."
+    },
+    "presentation": {
+      "level": "needs_work",
+      "score": 7,
+      "confidence": "medium",
+      "reason": "The 65-second talk follows a clear order and refers to the ZIP code chart, but it is far shorter than the time allowed, appears to have only one presenter, admits not understanding the outlier method, and describes a join and a customer-satisfaction finding that the notebook does not support.",
+      "evidence": [
+        "facts.json media: duration 65.7 s of a 5-minute limit",
+        "Transcript [00:56]: '...made the slides, but she couldn't be here for the recording.'",
+        "Transcript [00:23]: 'Honestly, I'm not really sure how the outlier part works.'",
+        "Transcript [00:32]: 'we did a left join with a zip code table to get the neighborhood names' (no join found in any cell)",
+        "Transcript [00:41] and [00:45]: 'north part of the county' and 'customer satisfaction is connected to the inspection results' (not shown in any output)",
+        "Transcript [00:37]: 'that is how we made the chart of fails by zip code' (refers to a chart)"
+      ],
+      "comment": "You were honest about what you finished and referred to your fail-by-ZIP chart. Next time both partners should speak, use more of the time to walk through each chart, and only describe steps and findings that appear in your notebook."
+    },
+    "collaboration": {
+      "level": "excellent",
+      "score": 18,
+      "confidence": "medium",
+      "reason": "The header has all four fields, the file name matches the convention and the responsibilities name a part for each partner, but the score sits at the bottom of the range because the transcript says one partner was absent and that partner's assigned charts and summaries are thin in the notebook.",
+      "evidence": [
+        "facts.json: filename_ok true, header_missing [], students_count 2",
+        "Cell 1: 'Student A: data loading, cleaning, outlier detection. Student B: charts, written summaries, presentation slides.'",
+        "Transcript [00:56]: '...made the slides, but she couldn't be here for the recording.'"
+      ],
+      "comment": "Your header is complete and clearly splits the work between both partners. Make sure each partner's share shows in the final product: the charts and written summaries listed under Student B should cover every question, and both partners should appear in the recording."
+    }
+  },
+  "flags": [
+    "Confirm both partners presented: at [00:56] the speaker says the partner who made the slides 'couldn't be here for the recording'.",
+    "Transcript line [00:56] contains a personal name that redaction did not replace (it may be misheard). Check it before sharing the transcript.",
+    "Confirm both partners contributed meaningfully: Responsibilities give charts and written summaries to Student B, but the notebook has one unlabeled chart and one summary."
+  ],
+  "ai_usage": {
+    "status": "review",
+    "signals": [
+      {"signal": "Leftover chatbot text", "evidence": "Cell 2: 'Certainly! Here's a comprehensive analysis of the dataset:'"},
+      {"signal": "Summary cites a column that does not appear in any output", "evidence": "Cell 10: '`customer_satisfaction_score`'; cell 4 output shows no such column. Repeated in transcript [00:45]: 'customer satisfaction is connected to the inspection results'"},
+      {"signal": "Presenter says they do not know how their own code works", "evidence": "Transcript [00:23]: 'Honestly, I'm not really sure how the outlier part works.' (cell 7 IsolationForest)"},
+      {"signal": "Spoken explanation contradicts what the notebook does", "evidence": "Transcript [00:32]: 'we did a left join with a zip code table to get the neighborhood names'; no join or ZIP code table appears in any cell"},
+      {"signal": "Method far outside the course, used without explanation", "evidence": "Cell 3: 'from sklearn.ensemble import IsolationForest' and cell 7 IsolationForest(contamination=0.05); no Markdown explains it"}
+    ]
+  },
+  "status": "needs review",
+  "graded_at": "2026-10-08T11:05:00"
+}

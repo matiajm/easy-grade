@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./submissions/**)",
+      "Read(./work/**/private_names.json)",
+      "Read(./work/**/transcript_raw.md)",
+      "Read(./samples/submissions/**)"
+    ]
+  }
+}
