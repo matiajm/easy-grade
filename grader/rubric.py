@@ -214,12 +214,8 @@ def _read_xlsx_rows(path: Path) -> tuple[list[dict], str | None]:
         if "Info" in wb.sheetnames:
             title = wb["Info"]["B1"].value
     finally:
-<<<<<<< HEAD
         # Read-only workbooks keep the file open until closed (locks it on Windows).
         wb.close()
-=======
-        wb.close()  # read-only workbooks keep the file open (locks it on Windows)
->>>>>>> 5ab76773b3480fae89b5b3b64c2cb3d600d8b4b7
     return rows, (str(title).strip() if title else None)
 
 
