@@ -12,7 +12,7 @@ Owner: Valery. Design sketches for the professor's side of EasyGrade. Everything
 
 ## The flow in the sketch
 
-1. **Choose the submissions folder.** One folder holds every notebook and video. A preview shows what was found before anything runs.
+1. **Choose the rubric and the submissions folder.** The rubric can be replaced by uploading an Excel or CSV made from the rubric template; a preview shows what was read (categories, points per level, total) before it is used. One folder holds every notebook and video, and a preview shows what was found before anything runs. The review screen says which rubric graded the batch.
 2. **Check the matches.** Each notebook is paired with its video by the student names in the file names (Ingest). Anything that could not be matched is shown so the professor can assign it, or choose "No video for this team".
 3. **Grading progress.** Matching, transcribing on this computer, reading notebooks, suggesting grades.
 4. **Review.** All teams in one list: grade, what needs attention, AI usage, and a Mark reviewed button. Each team opens into a dropdown with an overall summary, the strongest and weakest category, what to check, the AI-usage signals, and how the grade adds up (six categories with reason and evidence). The professor can change a score; the total is always added up by code.
@@ -32,3 +32,4 @@ He only wants four columns: `Student name`, `Score (out of 200)`, `Needs your at
 4. **Overall summary per team.** The two-sentence summary needs a new field from the Grader (for example `overall_summary` in `suggestion.json`), which is a contract change. Strongest and weakest category come from the scores and need nothing new.
 5. **Row order.** The sketch lists teams that need attention first. The professor may prefer alphabetical order for Canvas.
 6. **Wording.** All flag and AI-usage text is a draft for Jorge.
+7. **Replace rubric.** The start screen reuses the rubric import from step 1 (Excel or CSV, from the template). A full rubric editor stays in stage 5.2. Changing the rubric after grading would mean grading the batch again.
