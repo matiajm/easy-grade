@@ -1,0 +1,17 @@
+{
+  "schema_version": "1",
+  "team_id": "team-001",
+  "produced_by": "fixture",
+  "status": "ok",
+  "language": "en",
+  "duration_seconds": 42.0,
+  "engine": {"name": "whisper", "model_size": "base", "local": true},
+  "speaker_labels_available": false,
+  "segments": [
+    {"id": "s1", "start_s": 0.0, "end_s": 12.5, "text": "We dropped the three rows with no price because price is what we are predicting.", "confidence": 0.93, "speaker": null},
+    {"id": "s2", "start_s": 12.5, "end_s": 27.0, "text": "Then we removed houses above the 99th percentile, since a few mansions were pulling the fit.", "confidence": 0.9, "speaker": null},
+    {"id": "s3", "start_s": 27.0, "end_s": 42.0, "text": "Our R squared on the test set was 0.71, so the model explains most of the variation.", "confidence": 0.88, "speaker": null}
+  ],
+  "low_confidence_segment_ids": [],
+  "flags": []
+}

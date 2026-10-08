@@ -1,0 +1,32 @@
+{
+  "schema_version": "1",
+  "rubric_version": "example-1",
+  "note": "FAKE stand-in rubric for grader tests. Replace with config/rubric.json from task 0.3.",
+  "total_points": 60,
+  "sections": [
+    {
+      "section_id": "data_cleaning",
+      "name": "Data Cleaning",
+      "max_points": 30,
+      "checkable": "full",
+      "judged_from": "notebook",
+      "levels": [
+        {"level": "strong", "min_points": 24, "max_points": 30, "description": "Handles missing values and outliers, and explains each choice."},
+        {"level": "adequate", "min_points": 15, "max_points": 23, "description": "Handles missing values, with little explanation."},
+        {"level": "weak", "min_points": 0, "max_points": 14, "description": "No meaningful cleaning."}
+      ]
+    },
+    {
+      "section_id": "presentation",
+      "name": "Presentation",
+      "max_points": 30,
+      "checkable": "partial",
+      "judged_from": "transcript",
+      "levels": [
+        {"level": "strong", "min_points": 24, "max_points": 30, "description": "Explains why each step was done and what the results mean."},
+        {"level": "adequate", "min_points": 15, "max_points": 23, "description": "Describes what the code does, with little reasoning."},
+        {"level": "weak", "min_points": 0, "max_points": 14, "description": "Reads the code aloud or skips major steps."}
+      ]
+    }
+  ]
+}
