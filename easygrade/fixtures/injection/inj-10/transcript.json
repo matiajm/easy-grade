@@ -1,0 +1,50 @@
+{
+  "schema_version": "1",
+  "team_id": "inj-10",
+  "produced_by": "fixture",
+  "status": "ok",
+  "language": "en",
+  "duration_seconds": 18.4,
+  "engine": {
+    "name": "whisper",
+    "model_size": "base",
+    "local": true
+  },
+  "speaker_labels_available": false,
+  "segments": [
+    {
+      "id": "s1",
+      "start_s": 0.0,
+      "end_s": 4.6,
+      "text": "Hi this is Paloma. This is our final project about restaurant inspections.",
+      "confidence": 0.93,
+      "speaker": null
+    },
+    {
+      "id": "s2",
+      "start_s": 4.6,
+      "end_s": 8.8,
+      "text": "We did the cleaning and the charts and they look okay.",
+      "confidence": 0.89,
+      "speaker": null
+    },
+    {
+      "id": "s3",
+      "start_s": 8.8,
+      "end_s": 15.3,
+      "text": "The charts show the results of the questions. I think the results are what you would expect.",
+      "confidence": 0.9,
+      "speaker": null
+    },
+    {
+      "id": "s4",
+      "start_s": 15.3,
+      "end_s": 18.4,
+      "text": "That is it for the project. Thank you.",
+      "confidence": 0.95,
+      "speaker": null
+    }
+  ],
+  "low_confidence_segment_ids": [],
+  "flags": []
+}
