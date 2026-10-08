@@ -14,6 +14,7 @@ import nbformat
 from easygrade.pipeline.notebook.config import load_config
 from easygrade.pipeline.notebook.models import NotebookCells
 from easygrade.pipeline.notebook.parse import parse_notebook, write_notebook_cells
+from tests.fixture_tools import generated_into, needs_matplotlib, same_text, snapshot
 
 ROOT = Path(__file__).resolve().parents[1]
 BATCH = ROOT / "easygrade" / "fixtures" / "batch_a"
@@ -85,17 +86,13 @@ class BatchAFixtureTests(unittest.TestCase):
             if path.is_file():
                 self.assertIsNone(banned.search(path.read_text(encoding="utf-8")), path)
 
-    def test_generator_is_deterministic(self):
-        import subprocess
-        import sys
-
-        before = {p: p.read_bytes() for p in BATCH.rglob("*") if p.is_file()}
-        key_before = (ROOT / "easygrade" / "eval" / "answer_key.json").read_bytes()
-        subprocess.run([sys.executable, str(ROOT / "easygrade" / "fixtures" / "make_batch_a.py")],
-                       check=True, capture_output=True)
-        after = {p: p.read_bytes() for p in BATCH.rglob("*") if p.is_file()}
-        self.assertEqual(before, after)
-        self.assertEqual(key_before, (ROOT / "easygrade" / "eval" / "answer_key.json").read_bytes())
+    @needs_matplotlib
+    def test_committed_files_match_the_generator(self):
+        # Regenerates into a temp folder, never over the committed files. Image bytes are not compared:
+        # matplotlib output differs between systems.
+        with generated_into("make_batch_a.py") as out:
+            self.assertEqual(snapshot(out / "batch_a", "team-"), snapshot(BATCH, "team-"))
+            self.assertTrue(same_text(out / "answer_key.json", ROOT / "easygrade" / "eval" / "answer_key.json"))
 
 
 class BatchAParserTests(unittest.TestCase):

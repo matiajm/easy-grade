@@ -332,7 +332,7 @@ def build_transcript(team, rng):
     }
 
 
-def main():
+def main(batch: Path = BATCH, key_path: Path = KEY_PATH):
     answer = {
         "description": "FAKE answer key for batch A (synthetic data, invented students). Used only by evals; never given to the model.",
         "level_keys": LEVELS,
@@ -341,7 +341,7 @@ def main():
     }
     for idx, team in enumerate(TEAMS):
         rng = random.Random(1000 + idx)
-        out = BATCH / team["id"]
+        out = batch / team["id"]
         out.mkdir(parents=True, exist_ok=True)
         qk = team["quirks"]
         if "no_notebook" not in qk:
@@ -359,10 +359,18 @@ def main():
         entry = {"students": list(team["names"]), "planned_levels": team["levels"],
                  "seeded_problems": team.get("seeded", [])}
         answer["teams"][team["id"]] = entry
-    KEY_PATH.parent.mkdir(parents=True, exist_ok=True)
-    KEY_PATH.write_bytes((json.dumps(answer, indent=2) + "\n").encode("utf-8"))
-    print(f"wrote {len(TEAMS)} teams to {BATCH} and {KEY_PATH}")
+    key_path.parent.mkdir(parents=True, exist_ok=True)
+    key_path.write_bytes((json.dumps(answer, indent=2) + "\n").encode("utf-8"))
+    print(f"wrote {len(TEAMS)} teams to {batch} and {key_path}")
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--out", type=Path, help="write batch_a/ and answer_key.json here instead of the repo")
+    a = ap.parse_args()
+    if a.out:
+        main(a.out / "batch_a", a.out / "answer_key.json")
+    else:
+        main()
