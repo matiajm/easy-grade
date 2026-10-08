@@ -7,7 +7,8 @@ import argparse
 import json
 from pathlib import Path
 
-from .models import Evidence, Flag, ModelOutput, Section, Suggestion, Validation
+from .injection import find_injections
+from .models import AiUsage, Evidence, Flag, ModelOutput, Section, Suggestion, Validation
 from .prompt import PROMPT_VERSION, TOOL, build_system_prompt, build_user_message
 from .verify import verify
 
@@ -66,8 +67,23 @@ def _failed(base: dict, error: Exception) -> Suggestion:
                       flags=[Flag.make("GRADER_FAILED", "The grader could not produce a suggestion.")])
 
 
+AI_REVIEW_MESSAGE = "Worth a look: see the quoted evidence and note."  # placeholder until Jorge's 3.5 wording
+AI_DROPPED_NOTE = "A possible concern was raised without evidence that could be verified, so it is not flagged."
+
+
+def apply_ai_usage_rule(suggestion: Suggestion) -> None:
+    """review only with at least one verified evidence item (run after verify)."""
+    ai = suggestion.ai_usage
+    if ai.status != "review":
+        return
+    if any(ev.verified for ev in ai.evidence):
+        suggestion.flags.append(Flag.make("AI_USAGE_REVIEW", AI_REVIEW_MESSAGE))
+    else:
+        ai.status, ai.note = "no_concern", AI_DROPPED_NOTE
+
+
 def grade(client, team_id: str, rubric: dict, transcript: dict | None, notebook: dict | None,
-          model: str = MODEL, redact_names: bool = True) -> Suggestion:
+          model: str = MODEL, redact_names: bool = True, ai_policy: str | None = None) -> Suggestion:
     names = [n["name"] for n in (notebook or {}).get("names", [])]
     base = dict(team_id=team_id, produced_by=PRODUCED_BY, model=model, prompt_version=PROMPT_VERSION,
                 rubric_version=str(rubric.get("rubric_version", "unknown")),
@@ -80,7 +96,7 @@ def grade(client, team_id: str, rubric: dict, transcript: dict | None, notebook:
         resp = client.messages.create(
             model=model,
             max_tokens=8000,
-            system=build_system_prompt(rubric),
+            system=build_system_prompt(rubric, ai_policy),
             tools=[TOOL],
             tool_choice={"type": "auto"},
             messages=[{"role": "user", "content": build_user_message(segments, cells)}],
@@ -97,9 +113,14 @@ def grade(client, team_id: str, rubric: dict, transcript: dict | None, notebook:
         status="needs_manual" if errors else "ok",
         sections=sections,
         total=sum(s.score for s in sections),  # computed here, never taken from the model
+        ai_usage=AiUsage(status=model_out.ai_usage.status, note=model_out.ai_usage.note,
+                         evidence=[Evidence(**e.model_dump()) for e in model_out.ai_usage.evidence]),
         validation=Validation(scores_in_range=in_range, errors=errors),
+        flags=find_injections(transcript, notebook),
     )
-    return verify(suggestion, transcript, notebook)
+    verify(suggestion, transcript, notebook)
+    apply_ai_usage_rule(suggestion)
+    return suggestion
 
 
 def _load(path: Path) -> dict | None:

@@ -30,14 +30,21 @@ def _cell_texts(notebook: dict | None) -> dict[str, str]:
 
 def verify(suggestion: Suggestion, transcript: dict | None, notebook: dict | None) -> Suggestion:
     sources = {"transcript": _segment_texts(transcript), "notebook": _cell_texts(notebook)}
+
+    def check(ev) -> bool:
+        target = sources[ev.source].get(str(ev.ref))
+        quote = normalize(ev.quote)
+        ev.verified = bool(quote) and target is not None and quote in normalize(target)
+        return ev.verified
+
     checked = verified = 0
+    for ev in suggestion.ai_usage.evidence:
+        checked += 1
+        verified += check(ev)
     for section in suggestion.sections:
         for ev in section.evidence:
             checked += 1
-            target = sources[ev.source].get(str(ev.ref))
-            quote = normalize(ev.quote)
-            ev.verified = bool(quote) and target is not None and quote in normalize(target)
-            if ev.verified:
+            if check(ev):
                 verified += 1
             else:
                 section.flags.append(Flag.make(

@@ -13,6 +13,8 @@ FLAG_SEVERITY = {
     "GRADER_FAILED": "block",
     "QUOTE_UNVERIFIED": "warn",
     "LOW_CONFIDENCE_SECTION": "warn",
+    "INJECTION_SUSPECTED": "warn",
+    "AI_USAGE_REVIEW": "info",
 }
 
 
@@ -43,8 +45,16 @@ class ModelSection(BaseModel):
     evidence: list[ModelEvidence] = []
 
 
+class ModelAiUsage(BaseModel):
+    status: Literal["no_concern", "review"] = "no_concern"
+    evidence: list[ModelEvidence] = Field(
+        default=[], description="Required for review: exact quotes showing the specific concern")
+    note: str = Field(default="", description="Neutral, factual description of what to look at")
+
+
 class ModelOutput(BaseModel):
     sections: list[ModelSection]
+    ai_usage: ModelAiUsage = ModelAiUsage()
 
 
 # --- suggestion.json ---
