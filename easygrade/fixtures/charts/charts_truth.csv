@@ -1,0 +1,6 @@
+image,has_title,x_axis_labeled,y_axis_labeled,legend_ok,title_text,notes,human_has_title,human_x_axis_labeled,human_y_axis_labeled,human_legend_ok
+team-001_excellent_bar.png,,,,,,,true,true,true,true
+team-001_excellent_line.png,,,,,,,true,true,true,true
+team-003_good_bar.png,,,,,,,true,true,false,true
+team-003_good_line.png,,,,,,,true,false,false,true
+team-006_poor_bar.png,,,,,,,false,false,false,true
